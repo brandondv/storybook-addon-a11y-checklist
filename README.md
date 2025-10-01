@@ -3,14 +3,19 @@ Easily maintain a checklist of your components
 
 ### Development scripts
 
-- `npm run start` runs babel in watch mode and starts Storybook
-- `npm run build` build and package your addon code
+- `npm run start` runs Vite in watch mode and starts Storybook
+- `npm run build` build and package your addon code using Vite
+- `npm run build:watch` runs Vite build in watch mode
+- `npm run dev` runs the standalone server and Storybook concurrently
+- `npm run server` runs the standalone Express server for API endpoints
 
-### Switch from TypeScript to JavaScript
+### Build System
 
-Don't want to use TypeScript? We offer a handy eject command: `npm run eject-ts`
-
-This will convert all code to JS. It is a destructive process, so we recommended running this before you start writing any code.
+This addon uses Vite for building, which provides:
+- Fast development builds with hot reloading
+- Optimized production builds
+- TypeScript support with automatic type generation
+- Support for both ES modules and CommonJS output
 
 ## What's included?
 
@@ -24,15 +29,15 @@ The addon code lives in `src`. It demonstrates all core addon related concepts. 
 
 Which, along with the addon itself, are registered in `src/manager.ts`.
 
-Managing State and interacting with a story:
+The addon is built with the following components:
 
-- `src/withGlobals.ts` & `src/Tool.tsx` demonstrates how to use `useGlobals` to manage global state and modify the contents of a Story.
-- `src/withRoundTrip.ts` & `src/Panel.tsx` demonstrates two-way communication using channels.
-- `src/Tab.tsx` demonstrates how to use `useParameter` to access the current story's parameters.
+- `src/Panel.tsx` - Main panel interface for managing accessibility checklists
+- `src/Tab.tsx` - Alternative tab interface (maintained for backward compatibility)
+- `src/Tool.tsx` - Toolbar component for quick access
+- `src/server.ts` - Express server for API endpoints and file system operations
+- `src/cli/index.ts` - Command-line interface for server management
 
-Your addon might use one or more of these patterns. Feel free to delete unused code. Update `src/manager.ts` and `src/preview.ts` accordingly.
-
-Lastly, configure you addon name in `src/constants.ts`.
+The addon configuration is managed in `src/constants.ts`.
 
 ### Bundling
 
@@ -42,15 +47,16 @@ Addons can interact with a Storybook project in multiple ways. It is recommended
 - Preview entries are used to add UI or behavior to the preview iframe where stories are rendered.
 - Presets are used to modify the Storybook configuration, similar to how [users can configure their `main.ts` configurations](https://storybook.js.org/docs/react/api/main-config).
 
-Since each of these places represents a different environment with different features and modules, it is also recommended to split and build your modules accordingly. This addon-kit comes with a preconfigured [bundling configuration](./tsup.config.ts) that supports this split, and you are free to modify and extend it as needed.
+Since each of these places represents a different environment with different features and modules, it is also recommended to split and build your modules accordingly. This addon uses [Vite for bundling](./vite.config.ts) with a configuration that supports this split and automatically handles the different environments.
 
-You can define which modules match which environments in the [`package.json#bundler`](./package.json) property:
+The Vite build configuration automatically handles:
 
-- `exportEntries` is a list of module entries that users can manually import from anywhere they need to. For example, you could have decorators that users need to import into their `preview.ts` file or utility functions that can be used in their `main.ts` files.
-- `managerEntries` is a list of module entries meant only for the manager UI. These modules will be bundled to ESM and won't include types since they are mostly loaded by Storybook directly.
-- `previewEntries` is a list of module entries meant only for the preview UI. These modules will be bundled to ESM and won't include types since they are mostly loaded by Storybook directly.
+- **Browser entries**: `index`, `manager`, `preview` - Built for browser environments with appropriate externals
+- **Node.js entries**: `preset`, `server`, `cli/index` - Built for Node.js with Node.js built-ins externalized
+- **Dual format output**: Both ESM (`.js`) and CommonJS (`.cjs`) formats are generated
+- **TypeScript declarations**: Automatically generated for all entries using `vite-plugin-dts`
 
-Manager and preview entries are only used in the browser so they only output ESM modules. Export entries could be used both in the browser and in Node depending on their use case, so they both output ESM and CJS modules.
+Manager and preview entries are only used in the browser so they externalize Storybook browser packages. Node entries like presets and servers externalize Node.js built-ins and packages. Export entries can be used in both environments depending on their use case.
 
 #### Globalized packages
 
