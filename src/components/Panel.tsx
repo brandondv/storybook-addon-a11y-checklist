@@ -318,7 +318,6 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
           onStatusesChange={(statuses) =>
             setFilters((prev) => ({ ...prev, status: statuses }))
           }
-          isReadOnly={isReadOnlyMode}
           MultiSelectComponent={MultiSelect}
         />
 
