@@ -23,17 +23,13 @@ This addon uses Vite for building, which provides:
 
 The addon code lives in `src`. It demonstrates all core addon related concepts. The three [UI paradigms](https://storybook.js.org/docs/react/addons/addon-types#ui-based-addons)
 
-- `src/Tool.tsx`
 - `src/Panel.tsx`
-- `src/Tab.tsx`
 
-Which, along with the addon itself, are registered in `src/manager.ts`.
+Which is registered in `src/manager.ts`.
 
 The addon is built with the following components:
 
-- `src/Panel.tsx` - Main panel interface for managing accessibility checklists
-- `src/Tab.tsx` - Alternative tab interface (maintained for backward compatibility)
-- `src/Tool.tsx` - Toolbar component for quick access
+- `src/Panel.tsx` - Main panel interface for managing accessibility checklists  
 - `src/server.ts` - Express server for API endpoints and file system operations
 - `src/cli/index.ts` - Command-line interface for server management
 

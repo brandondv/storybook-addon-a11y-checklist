@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { styled } from "storybook/theming";
 import { useStorybookApi, useStorybookState } from "storybook/manager-api";
 import { ChecklistClientManager } from "../utils/client-manager";
 import {
@@ -13,6 +12,19 @@ import type {
   WCAGGuideline,
   ChecklistStatus,
 } from "../types";
+import {
+  PanelWrapper,
+  Header,
+  Title,
+  ButtonGroup,
+  Badge,
+  Button,
+  Input,
+} from "./ui/StyledComponents";
+import { MultiSelect } from "./ui/MultiSelect";
+import { SummaryBlocks } from "./ui/SummaryBlocks";
+import { ChecklistFilters } from "./ui/ChecklistFilters";
+import { GuidelineCard } from "./ui/GuidelineCard";
 
 interface PanelProps {
   active: boolean;
@@ -23,269 +35,6 @@ interface FilterState {
   search: string;
   status: string[];
 }
-
-const STATUS_COLORS = {
-  pass: "#28a745",
-  fail: "#dc3545",
-  not_applicable: "#6c757d",
-  unknown: "#ffc107",
-} as const;
-
-const STATUS_LABELS = {
-  pass: "Pass",
-  fail: "Fail",
-  not_applicable: "N/A",
-  unknown: "Unknown",
-} as const;
-
-const LEVEL_COLORS = {
-  A: "#4ade80",     // Light green
-  AA: "#22c55e",    // Medium green  
-  AAA: "#16a34a",   // Dark green
-} as const;
-
-const PanelWrapper = styled.div(({ theme }) => ({
-  background: theme.background.content,
-  padding: "16px",
-  height: "100%",
-  overflow: "auto",
-  boxSizing: "border-box",
-}));
-
-const Header = styled.div({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: "16px",
-});
-
-const Title = styled.h1({
-  margin: 0,
-  fontSize: "18px",
-  fontWeight: 600,
-});
-
-const ButtonGroup = styled.div({
-  display: "flex",
-  gap: "8px",
-  alignItems: "center",
-});
-
-const Badge = styled.span<{
-  variant?: "warning" | "success" | "danger" | "secondary";
-  customColor?: string;
-}>(({ variant, customColor, theme }) => {
-  if (customColor) {
-    return {
-      background: customColor,
-      color: "white",
-      padding: "4px 8px",
-      borderRadius: "4px",
-      fontSize: "12px",
-      fontWeight: 500,
-    };
-  }
-
-  const colors = {
-    warning: { bg: "#ffc107", color: "#212529" },
-    success: { bg: "#28a745", color: "white" },
-    danger: { bg: "#dc3545", color: "white" },
-    secondary: { bg: "#6c757d", color: "white" },
-  };
-
-  const colorScheme = variant ? colors[variant] : colors.secondary;
-
-  return {
-    background: colorScheme.bg,
-    color: colorScheme.color,
-    padding: "4px 8px",
-    borderRadius: "4px",
-    fontSize: "12px",
-    fontWeight: 500,
-  };
-});
-
-const Button = styled.button<{
-  variant: "primary" | "secondary";
-  disabled?: boolean;
-}>(({ variant, disabled }) => ({
-  background: disabled
-    ? "#6c757d"
-    : variant === "primary"
-      ? "#007bff"
-      : "#6c757d",
-  color: "white",
-  border: "none",
-  padding: "8px 16px",
-  borderRadius: "4px",
-  cursor: disabled ? "not-allowed" : "pointer",
-  fontSize: "14px",
-  fontWeight: 500,
-  opacity: disabled ? 0.6 : 1,
-}));
-
-const Input = styled.input({
-  width: "100%",
-  padding: "8px",
-  border: "1px solid #ddd",
-  borderRadius: "4px",
-  fontSize: "14px",
-  boxSizing: "border-box",
-});
-
-const Select = styled.select({
-  padding: "8px",
-  border: "1px solid #ddd",
-  borderRadius: "4px",
-  fontSize: "14px",
-});
-
-const MultiSelectContainer = styled.div({
-  position: "relative",
-  display: "inline-block",
-});
-
-const MultiSelectButton = styled.button({
-  padding: "8px 24px 8px 8px",
-  border: "1px solid #ddd",
-  borderRadius: "4px",
-  fontSize: "14px",
-  background: "white",
-  cursor: "pointer",
-  textAlign: "left",
-  minWidth: "120px",
-  position: "relative",
-  "&:after": {
-    content: '"▼"',
-    position: "absolute",
-    right: "8px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    fontSize: "10px",
-  },
-});
-
-const MultiSelectDropdown = styled.div<{ isOpen: boolean }>(({ isOpen }) => ({
-  position: "absolute",
-  top: "100%",
-  left: 0,
-  right: 0,
-  background: "white",
-  border: "1px solid #ddd",
-  borderTop: "none",
-  borderRadius: "0 0 4px 4px",
-  zIndex: 1000,
-  display: isOpen ? "block" : "none",
-  maxHeight: "200px",
-  overflowY: "auto",
-}));
-
-const MultiSelectOption = styled.label({
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  padding: "8px 12px",
-  cursor: "pointer",
-  fontSize: "14px",
-  "&:hover": {
-    backgroundColor: "#f5f5f5",
-  },
-});
-
-const SummaryContainer = styled.div({
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
-  gap: "12px",
-  marginBottom: "16px",
-});
-
-const SummaryBlock = styled.div<{
-  color: string;
-  backgroundColor: string;
-}>(({ color, backgroundColor }) => ({
-  backgroundColor,
-  color,
-  padding: "12px 16px",
-  borderRadius: "8px",
-  textAlign: "center",
-  fontWeight: 600,
-  fontSize: "14px",
-  border: `2px solid ${color}20`,
-  display: "flex",
-  flexDirection: "column",
-  gap: "4px",
-}));
-
-const SummaryLabel = styled.div({
-  fontSize: "12px",
-  fontWeight: 500,
-  opacity: 0.8,
-});
-
-const SummaryValue = styled.div({
-  fontSize: "18px",
-  fontWeight: 700,
-});
-
-const MultiSelectCheckbox = styled.input({
-  marginRight: "8px",
-});
-
-const GuidelineCard = styled.div(({ theme }) => ({
-  border: `1px solid ${theme.color.border}`,
-  borderRadius: "8px",
-  marginBottom: "12px",
-  padding: "16px",
-  background: theme.background.content,
-}));
-
-interface MultiSelectProps {
-  options: { value: string; label: string }[];
-  selected: string[];
-  onChange: (selected: string[]) => void;
-  placeholder: string;
-}
-
-const MultiSelect: React.FC<MultiSelectProps> = ({ options, selected, onChange, placeholder }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const getDisplayText = () => {
-    if (selected.length === 0) return placeholder;
-    if (selected.length === 1) return options.find(opt => opt.value === selected[0])?.label || "";
-    return `${selected.length} selected`;
-  };
-
-  const toggleOption = (value: string) => {
-    const newSelected = selected.includes(value)
-      ? selected.filter(v => v !== value)
-      : [...selected, value];
-    onChange(newSelected);
-  };
-
-  return (
-    <MultiSelectContainer>
-      <MultiSelectButton
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        onBlur={() => setTimeout(() => setIsOpen(false), 200)}
-      >
-        {getDisplayText()}
-      </MultiSelectButton>
-      <MultiSelectDropdown isOpen={isOpen}>
-        {options.map(option => (
-          <MultiSelectOption key={option.value}>
-            <MultiSelectCheckbox
-              type="checkbox"
-              checked={selected.includes(option.value)}
-              onChange={() => toggleOption(option.value)}
-            />
-            {option.label}
-          </MultiSelectOption>
-        ))}
-      </MultiSelectDropdown>
-    </MultiSelectContainer>
-  );
-};
 
 export const Panel: React.FC<PanelProps> = ({ active }) => {
   if (!active) return null;
@@ -303,7 +52,6 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
     level: [],
     status: [],
   });
-  const [customComponentPath, setCustomComponentPath] = useState("");
   const [isReadOnlyMode, setIsReadOnlyMode] = useState(false);
 
   const currentStoryId = state.storyId;
@@ -311,13 +59,8 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
 
   // Auto-detect component path from story, but allow user override
   const componentPath = useMemo(() => {
-    // Use custom path if provided
-    if (customComponentPath.trim()) {
-      return customComponentPath.trim();
-    }
-
     if (!currentStory || !currentStory.title) {
-      return "src/components/Component.tsx";
+      return "No component path detected";
     }
 
     // Try to extract from story parameters or title
@@ -326,7 +69,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
 
     // Generate a reasonable component path
     return `src/components/${componentName}.tsx`;
-  }, [currentStory, customComponentPath]);
+  }, [currentStory]);
 
   // Generate component ID from path for checklist identification
   const componentId = useMemo(() => {
@@ -336,7 +79,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
     // e.g., "src/components/Button.tsx" -> "button"
     // e.g., "components/MyButton/MyButton.jsx" -> "mybutton"
     const fileName = componentPath.split("/").pop() || "component";
-    const nameWithoutExt = fileName.replace(/\.(tsx?|jsx?)$/, "");
+    const nameWithoutExt = fileName.replace(/\\.(tsx?|jsx?)$/, "");
     return nameWithoutExt.toLowerCase().replace(/[^a-z0-9]/gi, "");
   }, [componentPath]);
 
@@ -368,7 +111,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
           componentPath
             .split("/")
             .pop()
-            ?.replace(/\.(tsx?|jsx?)$/, "") || "Component";
+            ?.replace(/\\.(tsx?|jsx?)$/, "") || "Component";
         const defaultChecklist = clientManager.createDefaultChecklist(
           componentId,
           componentPath,
@@ -398,7 +141,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
         componentPath
           .split("/")
           .pop()
-          ?.replace(/\.(tsx?|jsx?)$/, "") || "Component";
+          ?.replace(/\\.(tsx?|jsx?)$/, "") || "Component";
       const defaultChecklist: ChecklistFile = {
         version: DEFAULT_CONFIG.wcagVersion,
         componentId: componentId,
@@ -504,15 +247,20 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
   // Calculate summary stats
   const summary = useMemo(() => {
     if (!checklist)
-      return { pass: 0, fail: 0, not_applicable: 0, unknown: 0, total: 0 };
+      return { passed: 0, failed: 0, unknown: 0, not_applicable: 0, total: 0 };
 
     const stats = checklist.results.reduce(
       (acc, item) => {
-        acc[item.status]++;
+        // Map internal status to display format
+        if (item.status === "pass") acc.passed++;
+        else if (item.status === "fail") acc.failed++;
+        else if (item.status === "not_applicable") acc.not_applicable++;
+        else if (item.status === "unknown") acc.unknown++;
+
         acc.total++;
         return acc;
       },
-      { pass: 0, fail: 0, not_applicable: 0, unknown: 0, total: 0 },
+      { passed: 0, failed: 0, unknown: 0, not_applicable: 0, total: 0 },
     );
 
     return stats;
@@ -526,47 +274,22 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
     <PanelWrapper>
       <div style={{ marginBottom: "24px" }}>
         <Header>
-          <Title>A11Y Checklist</Title>
+          <Title>A11Y Checklist for {componentPath}</Title>
           <ButtonGroup>
-            {isOutdated && <Badge variant="warning">Outdated</Badge>}
-            {isReadOnlyMode && <Badge variant="secondary">Read-Only</Badge>}
-            <Button
-              variant="primary"
-              onClick={saveChecklist}
-              disabled={!hasUnsavedChanges || saving || isReadOnlyMode}
-            >
-              {saving ? "Saving..." : "Save"}
-            </Button>
+            {isOutdated && <Badge variant="danger">Outdated</Badge>}
+            {isReadOnlyMode ? (
+              <Badge variant="secondary">Read-Only</Badge>
+            ) : (
+              <Button
+                variant="primary"
+                onClick={saveChecklist}
+                disabled={!hasUnsavedChanges || saving}
+              >
+                {saving ? "Saving..." : "Save"}
+              </Button>
+            )}
           </ButtonGroup>
         </Header>
-
-        {/* Component Path Input */}
-        <div style={{ marginBottom: "16px" }}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "4px",
-              fontSize: "14px",
-              fontWeight: 500,
-            }}
-          >
-            Component Path:
-          </label>
-          <Input
-            type="text"
-            value={customComponentPath || componentPath}
-            onChange={(e) => {
-              setCustomComponentPath(e.target.value);
-            }}
-            placeholder="e.g., src/components/Button.tsx"
-            disabled={isReadOnlyMode}
-          />
-          <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-            {isReadOnlyMode
-              ? "Read-only mode: API server unavailable. Showing saved checklist data."
-              : "Auto-detected from story. Edit if needed."}
-          </div>
-        </div>
 
         {/* Last Updated Info */}
         {checklist && (
@@ -579,88 +302,25 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
         )}
 
         {/* Summary */}
-        {checklist && (
-          <SummaryContainer>
-            <SummaryBlock color="#495057" backgroundColor="#f8f9fa">
-              <SummaryLabel>Total</SummaryLabel>
-              <SummaryValue>{summary.total}</SummaryValue>
-            </SummaryBlock>
-            <SummaryBlock
-              color={STATUS_COLORS.pass}
-              backgroundColor={`${STATUS_COLORS.pass}15`}
-            >
-              <SummaryLabel>Pass</SummaryLabel>
-              <SummaryValue>{summary.pass}</SummaryValue>
-            </SummaryBlock>
-            <SummaryBlock
-              color={STATUS_COLORS.fail}
-              backgroundColor={`${STATUS_COLORS.fail}15`}
-            >
-              <SummaryLabel>Fail</SummaryLabel>
-              <SummaryValue>{summary.fail}</SummaryValue>
-            </SummaryBlock>
-            <SummaryBlock
-              color={STATUS_COLORS.not_applicable}
-              backgroundColor={`${STATUS_COLORS.not_applicable}15`}
-            >
-              <SummaryLabel>N/A</SummaryLabel>
-              <SummaryValue>{summary.not_applicable}</SummaryValue>
-            </SummaryBlock>
-            <SummaryBlock
-              color={STATUS_COLORS.unknown}
-              backgroundColor={`${STATUS_COLORS.unknown}15`}
-            >
-              <SummaryLabel>Unknown</SummaryLabel>
-              <SummaryValue>{summary.unknown}</SummaryValue>
-            </SummaryBlock>
-          </SummaryContainer>
-        )}
+        {checklist && <SummaryBlocks summary={summary} />}
 
         {/* Filters */}
-        <div
-          style={{
-            display: "flex",
-            gap: "12px",
-            marginBottom: "16px",
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          <Input
-            type="text"
-            placeholder="Search guidelines..."
-            value={filters.search}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, search: e.target.value }))
-            }
-            style={{ flex: 1, minWidth: "200px" }}
-          />
-          <MultiSelect
-            options={[
-              { value: "A", label: "Level A" },
-              { value: "AA", label: "Level AA" },
-              { value: "AAA", label: "Level AAA" },
-            ]}
-            selected={filters.level}
-            onChange={(selected) =>
-              setFilters((prev) => ({ ...prev, level: selected }))
-            }
-            placeholder="All Levels"
-          />
-          <MultiSelect
-            options={[
-              { value: "pass", label: "Pass" },
-              { value: "fail", label: "Fail" },
-              { value: "not_applicable", label: "N/A" },
-              { value: "unknown", label: "Unknown" },
-            ]}
-            selected={filters.status}
-            onChange={(selected) =>
-              setFilters((prev) => ({ ...prev, status: selected }))
-            }
-            placeholder="All Status"
-          />
-        </div>
+        <ChecklistFilters
+          searchTerm={filters.search}
+          onSearchChange={(value) =>
+            setFilters((prev) => ({ ...prev, search: value }))
+          }
+          selectedLevels={filters.level}
+          onLevelsChange={(levels) =>
+            setFilters((prev) => ({ ...prev, level: levels }))
+          }
+          selectedStatuses={filters.status}
+          onStatusesChange={(statuses) =>
+            setFilters((prev) => ({ ...prev, status: statuses }))
+          }
+          isReadOnly={isReadOnlyMode}
+          MultiSelectComponent={MultiSelect}
+        />
 
         {error && (
           <div
@@ -721,154 +381,39 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
             const reason = currentItem?.reason || "";
 
             return (
-              <GuidelineCard key={guideline.id}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    marginBottom: "12px",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      <h3
-                        style={{ margin: 0, fontSize: "14px", fontWeight: 600 }}
-                      >
-                        {guideline.id}
-                      </h3>
-                      <Badge
-                        customColor={
-                          LEVEL_COLORS[
-                            guideline.level as keyof typeof LEVEL_COLORS
-                          ]
-                        }
-                      >
-                        {guideline.level}
-                      </Badge>
-                      <Badge
-                        variant={
-                          status === "pass"
-                            ? "success"
-                            : status === "fail"
-                              ? "danger"
-                              : status === "unknown"
-                                ? "warning"
-                                : "secondary"
-                        }
-                      >
-                        {STATUS_LABELS[status]}
-                      </Badge>
-                    </div>
-                    <h4
-                      style={{
-                        margin: "0 0 8px 0",
-                        fontSize: "13px",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {guideline.title}
-                    </h4>
-                    <p
-                      style={{
-                        margin: "0 0 12px 0",
-                        fontSize: "12px",
-                        color: "#666",
-                      }}
-                    >
-                      {guideline.description}
-                    </p>
-                    <a
-                      href={guideline.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontSize: "11px", color: "#007bff" }}
-                    >
-                      View WCAG Specification →
-                    </a>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "16px",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "12px",
-                        fontWeight: 500,
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Status:
-                    </label>
-                    <Select
-                      value={status}
-                      onChange={(e) =>
-                        updateChecklistItem(guideline.id, {
-                          status: e.target.value as ChecklistStatus,
-                          reason:
-                            e.target.value === "fail" ? reason : undefined,
-                        })
-                      }
-                      style={{ fontSize: "12px" }}
-                      disabled={isReadOnlyMode}
-                    >
-                      <option value="unknown">Unknown</option>
-                      <option value="not_applicable">Not Applicable</option>
-                      <option value="pass">Pass</option>
-                      <option value="fail">Fail</option>
-                    </Select>
-                  </div>
-
-                  {status === "fail" && (
-                    <div style={{ flex: 1 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: "12px",
-                          fontWeight: 500,
-                          marginBottom: "4px",
-                        }}
-                      >
-                        Reason for failure:
-                      </label>
-                      <textarea
-                        value={reason}
-                        onChange={(e) =>
-                          updateChecklistItem(guideline.id, {
-                            reason: e.target.value,
-                          })
-                        }
-                        placeholder="Explain why this guideline fails..."
-                        rows={2}
-                        style={{
-                          width: "100%",
-                          padding: "6px",
-                          border: "1px solid #ddd",
-                          borderRadius: "4px",
-                          fontSize: "12px",
-                          resize: "vertical",
-                          boxSizing: "border-box",
-                        }}
-                        disabled={isReadOnlyMode}
-                      />
-                    </div>
-                  )}
-                </div>
-              </GuidelineCard>
+              <GuidelineCard
+                key={guideline.id}
+                guideline={{
+                  ...guideline,
+                  status:
+                    status === "pass"
+                      ? "passed"
+                      : status === "fail"
+                        ? "failed"
+                        : status === "not_applicable"
+                          ? "not_applicable"
+                          : "unknown",
+                  failureReason: reason,
+                }}
+                isReadOnly={isReadOnlyMode}
+                onStatusChange={(id, newStatus) => {
+                  const mappedStatus =
+                    newStatus === "passed"
+                      ? "pass"
+                      : newStatus === "failed"
+                        ? "fail"
+                        : newStatus === "not_applicable"
+                          ? "not_applicable"
+                          : "unknown";
+                  updateChecklistItem(id, {
+                    status: mappedStatus as ChecklistStatus,
+                    reason: newStatus === "failed" ? reason : undefined,
+                  });
+                }}
+                onFailureReasonChange={(id, newReason) => {
+                  updateChecklistItem(id, { reason: newReason });
+                }}
+              />
             );
           })}
 
