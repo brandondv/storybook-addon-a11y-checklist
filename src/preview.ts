@@ -4,13 +4,9 @@
  */
 import type { ProjectAnnotations, Renderer } from "storybook/internal/types";
 
-import { KEY } from "./constants";
-
 const preview: ProjectAnnotations<Renderer> = {
   decorators: [],
-  initialGlobals: {
-    [KEY]: false,
-  },
+  // No global state needed for panel-only addon
 };
 
 export default preview;

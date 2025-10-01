@@ -31,7 +31,9 @@ program
       if (outdatedChecklists.length > 0) {
         console.log('\n⚠️  Outdated Checklists:');
         outdatedChecklists.forEach(checklist => {
-          console.log(`  - ${checklist.storyId} (${checklist.componentPath})`);
+          console.log(
+            `  - ${checklist.componentId} (${checklist.componentPath})`,
+          );
         });
       }
 
@@ -39,7 +41,9 @@ program
         console.log('\n❌ Failing Checklists:');
         failingChecklists.forEach(checklist => {
           const failingItems = checklist.results.filter(item => item.status === 'fail');
-          console.log(`  - ${checklist.storyId} (${failingItems.length} failures)`);
+          console.log(
+            `  - ${checklist.componentId} (${failingItems.length} failures)`,
+          );
           failingItems.forEach(item => {
             console.log(`    • ${item.guidelineId}: ${item.reason || 'No reason provided'}`);
           });
@@ -94,7 +98,7 @@ program
           { pass: 0, fail: 0, not_applicable: 0, unknown: 0, total: 0 },
         );
 
-        console.log(`\n📄 ${checklist.storyId}`);
+        console.log(`\n📄 ${checklist.componentId}`);
         console.log(`   Component: ${checklist.componentPath}`);
         console.log(`   Updated: ${checklist.lastUpdated}`);
         console.log(

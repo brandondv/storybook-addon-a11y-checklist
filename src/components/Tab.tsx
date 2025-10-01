@@ -294,6 +294,7 @@ export const Tab: React.FC<TabProps> = ({ active }) => {
     level: ["all"],
     status: ["all"],
   });
+  const [isReadOnlyMode, setIsReadOnlyMode] = useState(false);
 
   const currentStoryId = state.storyId;
   const guidelines = useMemo(
@@ -321,6 +322,9 @@ export const Tab: React.FC<TabProps> = ({ active }) => {
         componentPath,
         DEFAULT_CONFIG.wcagVersion,
       );
+
+      // Check if we're in read-only mode
+      setIsReadOnlyMode(clientManager.isReadOnlyMode());
 
       // If no checklist exists, create a default one
       if (!data.checklist) {
@@ -440,10 +444,11 @@ export const Tab: React.FC<TabProps> = ({ active }) => {
           <Title>A11Y Checklist</Title>
           <ButtonGroup>
             {isOutdated && <Badge variant="warning">Outdated</Badge>}
+            {isReadOnlyMode && <Badge variant="secondary">Read-Only</Badge>}
             <Button
               variant="primary"
               onClick={saveChecklist}
-              disabled={!hasUnsavedChanges || saving}
+              disabled={!hasUnsavedChanges || saving || isReadOnlyMode}
             >
               {saving ? "Saving..." : "Save"}
             </Button>
@@ -467,7 +472,14 @@ export const Tab: React.FC<TabProps> = ({ active }) => {
             value={componentPath}
             onChange={(e) => setComponentPath(e.target.value)}
             placeholder="e.g., src/components/Button.tsx"
+            disabled={isReadOnlyMode}
           />
+          <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+            {isReadOnlyMode 
+              ? "Read-only mode: API server unavailable. Showing saved checklist data."
+              : "Enter the path to your component file."
+            }
+          </div>
         </div>
 
         {/* Summary */}
@@ -706,6 +718,7 @@ export const Tab: React.FC<TabProps> = ({ active }) => {
                             e.target.value === "fail" ? reason : undefined,
                         })
                       }
+                      disabled={isReadOnlyMode}
                     >
                       <option value="unknown">Unknown</option>
                       <option value="not_applicable">Not Applicable</option>
@@ -744,6 +757,7 @@ export const Tab: React.FC<TabProps> = ({ active }) => {
                           resize: "vertical",
                           boxSizing: "border-box",
                         }}
+                        disabled={isReadOnlyMode}
                       />
                     </div>
                   )}

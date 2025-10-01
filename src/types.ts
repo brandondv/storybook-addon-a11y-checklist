@@ -18,7 +18,7 @@ export interface ChecklistItem {
 
 export interface ChecklistFile {
   version: string; // WCAG version
-  storyId: string;
+  componentId: string;
   componentName?: string;
   componentPath: string;
   componentHash: string;
@@ -43,7 +43,7 @@ export interface ComponentHashResponse {
 }
 
 export interface SaveChecklistPayload {
-  storyId: string;
+  componentId: string;
   checklist: ChecklistFile;
 }
 

@@ -304,6 +304,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
     status: [],
   });
   const [customComponentPath, setCustomComponentPath] = useState("");
+  const [isReadOnlyMode, setIsReadOnlyMode] = useState(false);
 
   const currentStoryId = state.storyId;
   const currentStory = state.storiesHash?.[currentStoryId || ""] || null;
@@ -327,6 +328,18 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
     return `src/components/${componentName}.tsx`;
   }, [currentStory, customComponentPath]);
 
+  // Generate component ID from path for checklist identification
+  const componentId = useMemo(() => {
+    if (!componentPath) return "component";
+
+    // Extract component name from path and normalize it
+    // e.g., "src/components/Button.tsx" -> "button"
+    // e.g., "components/MyButton/MyButton.jsx" -> "mybutton"
+    const fileName = componentPath.split("/").pop() || "component";
+    const nameWithoutExt = fileName.replace(/\.(tsx?|jsx?)$/, "");
+    return nameWithoutExt.toLowerCase().replace(/[^a-z0-9]/gi, "");
+  }, [componentPath]);
+
   const guidelines = useMemo(
     () => getGuidelinesByVersion(DEFAULT_CONFIG.wcagVersion),
     [],
@@ -334,24 +347,32 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
   const clientManager = useMemo(() => new ChecklistClientManager(), []);
 
   const loadChecklist = useCallback(async () => {
-    if (!currentStoryId || !componentPath) return;
+    if (!componentId || !componentPath) return;
 
     setLoading(true);
     setError(null);
 
     try {
       const data = await clientManager.loadChecklist(
-        currentStoryId,
+        componentId,
         componentPath,
         DEFAULT_CONFIG.wcagVersion,
       );
 
+      // Check if we're in read-only mode
+      setIsReadOnlyMode(clientManager.isReadOnlyMode());
+
       // If no checklist exists, create a default one
       if (!data.checklist) {
+        const componentName =
+          componentPath
+            .split("/")
+            .pop()
+            ?.replace(/\.(tsx?|jsx?)$/, "") || "Component";
         const defaultChecklist = clientManager.createDefaultChecklist(
-          currentStoryId,
+          componentId,
           componentPath,
-          currentStory?.name || "Component",
+          componentName,
           DEFAULT_CONFIG.wcagVersion,
         );
         setChecklist(defaultChecklist);
@@ -369,14 +390,19 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
     } finally {
       setLoading(false);
     }
-  }, [currentStoryId, componentPath, clientManager]);
+  }, [componentId, componentPath, clientManager]);
 
   const createDefaultChecklist = useCallback(() => {
     try {
+      const componentName =
+        componentPath
+          .split("/")
+          .pop()
+          ?.replace(/\.(tsx?|jsx?)$/, "") || "Component";
       const defaultChecklist: ChecklistFile = {
         version: DEFAULT_CONFIG.wcagVersion,
-        storyId: currentStoryId || "",
-        componentName: currentStory?.name || "Component",
+        componentId: componentId,
+        componentName: componentName,
         componentPath: componentPath,
         componentHash: "",
         lastUpdated: new Date().toISOString(),
@@ -397,16 +423,16 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
       console.error("Error creating default checklist:", err);
       setError("Failed to create checklist");
     }
-  }, [currentStoryId, currentStory, componentPath, guidelines]);
+  }, [componentId, componentPath, guidelines]);
 
   const saveChecklist = useCallback(async () => {
-    if (!checklist || !currentStoryId) return;
+    if (!checklist || !componentId) return;
 
     setSaving(true);
     setError(null);
 
     try {
-      const data = await clientManager.saveChecklist(currentStoryId, checklist);
+      const data = await clientManager.saveChecklist(componentId, checklist);
 
       setHasUnsavedChanges(false);
       setIsOutdated(false);
@@ -424,14 +450,14 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
     } finally {
       setSaving(false);
     }
-  }, [checklist, currentStoryId, clientManager]);
+  }, [checklist, componentId, clientManager]);
 
-  // Load checklist when story changes
+  // Load checklist when component changes
   useEffect(() => {
-    if (!active || !currentStoryId || !componentPath) return;
+    if (!active || !componentId || !componentPath) return;
 
     loadChecklist();
-  }, [active, currentStoryId, componentPath, loadChecklist]);
+  }, [active, componentId, componentPath, loadChecklist]);
 
   const updateChecklistItem = useCallback(
     (guidelineId: string, updates: Partial<ChecklistItem>) => {
@@ -468,7 +494,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
         (r) => r.guidelineId === guideline.id,
       );
       const matchesStatus =
-        filters.status.length === 0 || 
+        filters.status.length === 0 ||
         (currentItem?.status && filters.status.includes(currentItem.status));
 
       return matchesSearch && matchesLevel && matchesStatus;
@@ -503,10 +529,11 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
           <Title>A11Y Checklist</Title>
           <ButtonGroup>
             {isOutdated && <Badge variant="warning">Outdated</Badge>}
+            {isReadOnlyMode && <Badge variant="secondary">Read-Only</Badge>}
             <Button
               variant="primary"
               onClick={saveChecklist}
-              disabled={!hasUnsavedChanges || saving}
+              disabled={!hasUnsavedChanges || saving || isReadOnlyMode}
             >
               {saving ? "Saving..." : "Save"}
             </Button>
@@ -532,9 +559,12 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
               setCustomComponentPath(e.target.value);
             }}
             placeholder="e.g., src/components/Button.tsx"
+            disabled={isReadOnlyMode}
           />
           <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-            Auto-detected from story. Edit if needed.
+            {isReadOnlyMode
+              ? "Read-only mode: API server unavailable. Showing saved checklist data."
+              : "Auto-detected from story. Edit if needed."}
           </div>
         </div>
 
@@ -543,9 +573,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
           <div style={{ marginBottom: "16px" }}>
             <div style={{ fontSize: "12px", color: "#666" }}>
               Last updated: {new Date(checklist.lastUpdated).toLocaleString()}
-              {checklist.updatedBy && (
-                <span> by {checklist.updatedBy}</span>
-              )}
+              {checklist.updatedBy && <span> by {checklist.updatedBy}</span>}
             </div>
           </div>
         )}
@@ -553,36 +581,33 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
         {/* Summary */}
         {checklist && (
           <SummaryContainer>
-            <SummaryBlock 
-              color="#495057" 
-              backgroundColor="#f8f9fa"
-            >
+            <SummaryBlock color="#495057" backgroundColor="#f8f9fa">
               <SummaryLabel>Total</SummaryLabel>
               <SummaryValue>{summary.total}</SummaryValue>
             </SummaryBlock>
-            <SummaryBlock 
-              color={STATUS_COLORS.pass} 
+            <SummaryBlock
+              color={STATUS_COLORS.pass}
               backgroundColor={`${STATUS_COLORS.pass}15`}
             >
               <SummaryLabel>Pass</SummaryLabel>
               <SummaryValue>{summary.pass}</SummaryValue>
             </SummaryBlock>
-            <SummaryBlock 
-              color={STATUS_COLORS.fail} 
+            <SummaryBlock
+              color={STATUS_COLORS.fail}
               backgroundColor={`${STATUS_COLORS.fail}15`}
             >
               <SummaryLabel>Fail</SummaryLabel>
               <SummaryValue>{summary.fail}</SummaryValue>
             </SummaryBlock>
-            <SummaryBlock 
-              color={STATUS_COLORS.not_applicable} 
+            <SummaryBlock
+              color={STATUS_COLORS.not_applicable}
               backgroundColor={`${STATUS_COLORS.not_applicable}15`}
             >
               <SummaryLabel>N/A</SummaryLabel>
               <SummaryValue>{summary.not_applicable}</SummaryValue>
             </SummaryBlock>
-            <SummaryBlock 
-              color={STATUS_COLORS.unknown} 
+            <SummaryBlock
+              color={STATUS_COLORS.unknown}
               backgroundColor={`${STATUS_COLORS.unknown}15`}
             >
               <SummaryLabel>Unknown</SummaryLabel>
@@ -720,7 +745,11 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
                         {guideline.id}
                       </h3>
                       <Badge
-                        customColor={LEVEL_COLORS[guideline.level as keyof typeof LEVEL_COLORS]}
+                        customColor={
+                          LEVEL_COLORS[
+                            guideline.level as keyof typeof LEVEL_COLORS
+                          ]
+                        }
                       >
                         {guideline.level}
                       </Badge>
@@ -795,6 +824,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
                         })
                       }
                       style={{ fontSize: "12px" }}
+                      disabled={isReadOnlyMode}
                     >
                       <option value="unknown">Unknown</option>
                       <option value="not_applicable">Not Applicable</option>
@@ -833,6 +863,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
                           resize: "vertical",
                           boxSizing: "border-box",
                         }}
+                        disabled={isReadOnlyMode}
                       />
                     </div>
                   )}

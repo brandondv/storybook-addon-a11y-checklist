@@ -35,7 +35,7 @@ const ChecklistItemSchema = z
 
 const ChecklistFileSchema = z.object({
   version: z.string(),
-  storyId: z.string(),
+  componentId: z.string(),
   componentName: z.string().optional(),
   componentPath: z.string(),
   componentHash: z.string(),
@@ -74,10 +74,10 @@ export class ChecklistManager {
   }
 
   /**
-   * Get the file path for a story's checklist
+   * Get the file path for a component's checklist
    */
-  private getChecklistFilePath(storyId: string): string {
-    return join(this.checklistDir, `${storyId}.a11y.json`);
+  private getChecklistFilePath(componentId: string): string {
+    return join(this.checklistDir, `${componentId}.a11y.json`);
   }
 
   /**
@@ -98,11 +98,11 @@ export class ChecklistManager {
   }
 
   /**
-   * Load a checklist file for a story
+   * Load a checklist file for a component
    */
-  async loadChecklist(storyId: string): Promise<ChecklistFile | null> {
+  async loadChecklist(componentId: string): Promise<ChecklistFile | null> {
     try {
-      const filePath = this.getChecklistFilePath(storyId);
+      const filePath = this.getChecklistFilePath(componentId);
       const content = await fs.readFile(filePath, "utf-8");
       const data = JSON.parse(content);
 
@@ -113,7 +113,7 @@ export class ChecklistManager {
       if ((error as any).code === "ENOENT") {
         return null; // File doesn't exist
       }
-      console.error(`Error loading checklist for ${storyId}:`, error);
+      console.error(`Error loading checklist for ${componentId}:`, error);
       throw error;
     }
   }
@@ -138,20 +138,23 @@ export class ChecklistManager {
         },
       };
 
-      const filePath = this.getChecklistFilePath(checklist.storyId);
+      const filePath = this.getChecklistFilePath(checklist.componentId);
       const content = JSON.stringify(updatedChecklist, null, 2);
       await fs.writeFile(filePath, content, "utf-8");
     } catch (error) {
-      console.error(`Error saving checklist for ${checklist.storyId}:`, error);
+      console.error(
+        `Error saving checklist for ${checklist.componentId}:`,
+        error,
+      );
       throw error;
     }
   }
 
   /**
-   * Create a default checklist template for a story
+   * Create a default checklist template for a component
    */
   async createDefaultChecklist(
-    storyId: string,
+    componentId: string,
     componentPath: string,
     componentName?: string,
     wcagVersion: string = DEFAULT_CONFIG.wcagVersion,
@@ -169,7 +172,7 @@ export class ChecklistManager {
 
     return {
       version: wcagVersion,
-      storyId,
+      componentId,
       componentName,
       componentPath,
       componentHash: "", // Will be computed when saved
@@ -209,8 +212,8 @@ export class ChecklistManager {
       const checklists: ChecklistFile[] = [];
       for (const file of checklistFiles) {
         try {
-          const storyId = file.replace(".a11y.json", "");
-          const checklist = await this.loadChecklist(storyId);
+          const componentId = file.replace(".a11y.json", "");
+          const checklist = await this.loadChecklist(componentId);
           if (checklist) {
             checklists.push(checklist);
           }
