@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { styled } from "storybook/theming";
+import { styled } from "@storybook/theming";
 
 const MultiSelectContainer = styled.div({
   position: "relative",

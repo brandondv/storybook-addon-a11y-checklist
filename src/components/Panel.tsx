@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useStorybookApi, useStorybookState } from "storybook/manager-api";
+import { useStorybookApi, useStorybookState } from "@storybook/manager-api";
 import { ChecklistClientManager } from "../utils/client-manager";
 import {
   WCAG_2_2_GUIDELINES,
@@ -55,16 +55,20 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
   const [isReadOnlyMode, setIsReadOnlyMode] = useState(false);
 
   const currentStoryId = state.storyId;
-  const currentStory = state.storiesHash?.[currentStoryId || ""] || null;
+  const currentStory =
+    state.storiesHash?.[currentStoryId || ""] ||
+    state.index?.[currentStoryId || ""] ||
+    null;
 
   // Auto-detect component path from story, but allow user override
   const componentPath = useMemo(() => {
-    if (!currentStory || !currentStory.title) {
+    if (!currentStory) {
       return "No component path detected";
     }
 
-    // Try to extract from story parameters or title
-    const storyTitle = currentStory.title || "";
+    // Try to extract from story parameters or title - handle both Storybook 8 and 9 structures
+    const storyTitle =
+      (currentStory as any).title || (currentStory as any).name || "";
     const componentName = storyTitle.split("/").pop() || "Component";
 
     // Generate a reasonable component path
@@ -318,7 +322,6 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
           onStatusesChange={(statuses) =>
             setFilters((prev) => ({ ...prev, status: statuses }))
           }
-          MultiSelectComponent={MultiSelect}
         />
 
         {error && (

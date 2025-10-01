@@ -1,5 +1,5 @@
 import React from "react";
-import { styled } from "storybook/theming";
+import { styled } from "@storybook/theming";
 import { Input } from "./StyledComponents";
 import { MultiSelect } from "./MultiSelect";
 

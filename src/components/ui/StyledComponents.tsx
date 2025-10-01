@@ -1,4 +1,4 @@
-import { styled } from "storybook/theming";
+import { styled } from "@storybook/theming";
 
 export const PanelWrapper = styled.div(({ theme }) => ({
   background: theme.background.content,
@@ -72,10 +72,10 @@ export const Button = styled.button<{
       : "#6c757d",
   color: "white",
   border: "none",
-  padding: "8px 16px",
+  padding: "2px 8px",
   borderRadius: "4px",
   cursor: disabled ? "not-allowed" : "pointer",
-  fontSize: "14px",
+  fontSize: "12px",
   fontWeight: 500,
   opacity: disabled ? 0.6 : 1,
 }));
@@ -94,6 +94,10 @@ export const Select = styled.select({
   border: "1px solid #ddd",
   borderRadius: "4px",
   fontSize: "14px",
+});
+
+export const Link = styled.a({
+  color: "white",
 });
 
 export const GuidelineCardWrapper = styled.div(({ theme }) => ({

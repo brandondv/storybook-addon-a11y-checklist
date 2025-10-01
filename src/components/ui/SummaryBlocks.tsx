@@ -1,5 +1,5 @@
 import React from "react";
-import { styled } from "storybook/theming";
+import { styled } from "@storybook/theming";
 
 const SummaryContainer = styled.div({
   display: "flex",

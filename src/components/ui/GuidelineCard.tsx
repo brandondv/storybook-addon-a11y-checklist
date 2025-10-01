@@ -1,6 +1,6 @@
 import React from "react";
-import { styled } from "storybook/theming";
-import { Badge, Button, Select } from "./StyledComponents";
+import { styled } from "@storybook/theming";
+import { Badge, Button, Link, Select } from "./StyledComponents";
 import { STATUS_COLORS, STATUS_LABELS, LEVEL_COLORS } from "./constants";
 
 const GuidelineItemCard = styled.div({
@@ -109,11 +109,13 @@ export const GuidelineCard: React.FC<GuidelineCardProps> = ({
       <GuidelineHeader>
         <GuidelineInfo>
           <GuidelineDetails>
-            <Badge
-              customColor={STATUS_COLORS[mapStatusToKey(guideline.status)]}
-            >
-              {STATUS_LABELS[mapStatusToKey(guideline.status)]}
-            </Badge>
+            {isReadOnly && (
+              <Badge
+                customColor={STATUS_COLORS[mapStatusToKey(guideline.status)]}
+              >
+                {STATUS_LABELS[mapStatusToKey(guideline.status)]}
+              </Badge>
+            )}
             <Badge
               customColor={
                 LEVEL_COLORS[guideline.level as keyof typeof LEVEL_COLORS]
@@ -126,9 +128,9 @@ export const GuidelineCard: React.FC<GuidelineCardProps> = ({
             </GuidelineTitle>
           </GuidelineDetails>
           <GuidelineDescription>{guideline.description}</GuidelineDescription>
-          <a href={guideline.url} target="_blank" rel="noopener noreferrer">
+          <Link href={guideline.url} target="_blank" rel="noopener noreferrer">
             Read more
-          </a>
+          </Link>
         </GuidelineInfo>
       </GuidelineHeader>
 
