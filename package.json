@@ -1,7 +1,7 @@
 {
   "name": "storybook-addon-a11y-checklist",
   "version": "1.0.0",
-  "description": "A Storybook addon for maintaining WCAG accessibility checklists per story",
+  "description": "A Storybook addon for maintaining WCAG accessibility checklists per component",
   "keywords": [
     "storybook-addons",
     "accessibility",
@@ -11,11 +11,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/storybookjs/storybook-a11y-checklist-addon"
+    "url": "https://github.com/brandondv/storybook-addon-a11y-checklist"
   },
   "type": "module",
   "license": "MIT",
-  "author": "package-author",
+  "author": "brandondv",
   "bin": {
     "a11y-checklist": "./dist/cli/index.js"
   },

@@ -1,234 +1,324 @@
-# Storybook Addon A11Y Checklist
-Easily maintain a checklist of your components
+# 🔍 Storybook Addon A11Y Checklist
 
-### Development scripts
+A comprehensive Storybook addon for maintaining WCAG accessibility checklists per component with server-side persistence, automated tracking, and CI/CD integration.
 
-- `npm run start` runs Vite in watch mode and starts Storybook
-- `npm run build` build and package your addon code using Vite
-- `npm run build:watch` runs Vite build in watch mode
-- `npm run dev` runs the standalone server and Storybook concurrently
-- `npm run server` runs the standalone Express server for API endpoints
+![npm version](https://img.shields.io/npm/v/storybook-addon-a11y-checklist)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Storybook](https://img.shields.io/badge/Storybook-9+-FF4785?logo=storybook)
 
-### Build System
+## ✨ Features
 
-This addon uses Vite for building, which provides:
-- Fast development builds with hot reloading
-- Optimized production builds
-- TypeScript support with automatic type generation
-- Support for both ES modules and CommonJS output
+### 🎯 Component-Based Accessibility Tracking
+- **Component-centric checklists** - Track accessibility compliance per component, not per story
+- **Auto-component detection** - Automatically detects component paths from Storybook stories
+- **Manual override support** - Customize component paths when auto-detection isn't sufficient
+- **Component versioning** - Tracks component changes with file hashing to detect outdated checklists
 
-## What's included?
+### 📋 Comprehensive WCAG 2.2 Support
+- **87 WCAG 2.2 Guidelines** - Complete coverage of Level A, AA, and AAA criteria
+- **Interactive checklist UI** - Mark items as Pass/Fail/Not Applicable/Unknown
+- **Failure reason tracking** - Required explanations for failed accessibility criteria
+- **Direct WCAG links** - Quick access to official WCAG specification for each guideline
 
-![Demo](https://user-images.githubusercontent.com/42671/107857205-e7044380-6dfa-11eb-8718-ad02e3ba1a3f.gif)
+### 🔄 Smart State Management
+- **Server-side persistence** - Checklists saved as JSON files in your project
+- **Read-only fallback** - Graceful degradation when server is unavailable
+- **Auto-save functionality** - Changes saved automatically with unsaved changes indicator
+- **Outdated detection** - Automatically detects when component changes make checklists outdated
 
-The addon code lives in `src`. It demonstrates all core addon related concepts. The three [UI paradigms](https://storybook.js.org/docs/react/addons/addon-types#ui-based-addons)
+### 🎨 Advanced Filtering & Search
+- **Multi-select filters** - Filter by WCAG levels (A/AA/AAA) and status simultaneously  
+- **Real-time search** - Search across guideline titles, descriptions, and IDs
+- **Visual status indicators** - Color-coded badges for quick status identification
+- **Summary statistics** - Real-time counts of passed/failed/not applicable/unknown items
 
-- `src/Panel.tsx`
+### 🚀 CI/CD Integration
+- **CLI tool included** - Check accessibility compliance in build pipelines
+- **Configurable failure modes** - Fail builds on outdated or failing checklists
+- **Detailed reporting** - Comprehensive CLI output for debugging failures
+- **Project-wide scanning** - Analyze all checklists across your entire project
 
-Which is registered in `src/manager.ts`.
+## 📦 Installation
 
-The addon is built with the following components:
-
-- `src/Panel.tsx` - Main panel interface for managing accessibility checklists  
-- `src/server.ts` - Express server for API endpoints and file system operations
-- `src/cli/index.ts` - Command-line interface for server management
-
-The addon configuration is managed in `src/constants.ts`.
-
-### Bundling
-
-Addons can interact with a Storybook project in multiple ways. It is recommended to familiarize yourself with [the basics](https://storybook.js.org/docs/react/addons/introduction) before getting started.
-
-- Manager entries are used to add UI or behavior to the Storybook manager UI.
-- Preview entries are used to add UI or behavior to the preview iframe where stories are rendered.
-- Presets are used to modify the Storybook configuration, similar to how [users can configure their `main.ts` configurations](https://storybook.js.org/docs/react/api/main-config).
-
-Since each of these places represents a different environment with different features and modules, it is also recommended to split and build your modules accordingly. This addon uses [Vite for bundling](./vite.config.ts) with a configuration that supports this split and automatically handles the different environments.
-
-The Vite build configuration automatically handles:
-
-- **Browser entries**: `index`, `manager`, `preview` - Built for browser environments with appropriate externals
-- **Node.js entries**: `preset`, `server`, `cli/index` - Built for Node.js with Node.js built-ins externalized
-- **Dual format output**: Both ESM (`.js`) and CommonJS (`.cjs`) formats are generated
-- **TypeScript declarations**: Automatically generated for all entries using `vite-plugin-dts`
-
-Manager and preview entries are only used in the browser so they externalize Storybook browser packages. Node entries like presets and servers externalize Node.js built-ins and packages. Export entries can be used in both environments depending on their use case.
-
-#### Globalized packages
-
-Storybook provides a predefined set of packages that are available in the manager UI and the preview UI. In the final bundle of your addon, these packages should not be included. Instead, the imports should stay in place, allowing Storybook to replace those imports with the actual packages during the Storybook build process.
-
-The list of packages differs between the manager and the preview, which is why there is a slight difference between `managerEntries` and `previewEntries`. Most notably, `react` and `react-dom` are prebundled in the manager but not in the preview. This means that your manager entries can use React to build UI without bundling it or having a direct reference to it. Therefore, it is safe to have React as a `devDependency` even though you are using it in production. _Requiring React as a peer dependency would unnecessarily force your users to install React._
-
-An exception to this rule is if you are using React to inject UI into the preview, which does not come prebundled with React. In such cases, you need to move `react` and `react-dom` to a peer dependency. However, we generally advise against this pattern since it would limit the usage of your addon to React-based Storybooks.
-
-### Metadata
-
-Storybook addons are listed in the [catalog](https://storybook.js.org/addons) and distributed via npm. The catalog is populated by querying npm's registry for Storybook-specific metadata in `package.json`. This project has been configured with sample data. Learn more about available options in the [Addon metadata docs](https://storybook.js.org/docs/react/addons/addon-catalog#addon-metadata).
-
-## Documentation
-
-To help the community use your addon and understand its capabilities, please document it thoroughly.
-
-To get started, replace this README with the content in this sample template.
-
-### Sample documentation template
-
-````md
-# My Addon
-
-## Installation
-
-First, install the package.
-
-```sh
-npm install --save-dev my-addon
+```bash
+npm install --save-dev storybook-addon-a11y-checklist
 ```
 
-Then, register it as an addon in `.storybook/main.js`.
+## ⚙️ Setup
 
-```ts
-// .storybook/main.ts
+### 1. Add to Storybook Configuration
 
-// Replace your-framework with the framework you are using (e.g., react-webpack5, vue3-vite)
-import type { StorybookConfig } from '@storybook/your-framework';
+Add the addon to your `.storybook/main.js`:
 
-const config: StorybookConfig = {
-  // ...rest of config
+```javascript
+export default {
   addons: [
-    '@storybook/addon-docs'
-    'my-addon', // 👈 register the addon here
+    // ... other addons
+    'storybook-addon-a11y-checklist'
   ],
 };
-
-export default config;
 ```
 
-## Usage
+### 2. Optional: Configure Settings
 
-The primary way to use this addon is to define the `exampleParameter` parameter. You can do this the
-component level, as below, to affect all stories in the file, or you can do it for a single story.
+Create `.storybook/a11y-checklist.config.js` for custom configuration:
 
-```ts
-// Button.stories.ts
+```javascript
+export default {
+  // WCAG version to use (default: "2.2")
+  wcagVersion: "2.2",
+  
+  // Directory to store checklist files (default: "a11y-checklists")
+  checklistDir: "accessibility-checklists",
+  
+  // Require failure reasons for failed items (default: true)
+  requireReasonOnFail: true,
+};
+```
 
-// Replace your-framework with the name of your framework
-import type { Meta } from '@storybook/your-framework';
+## 🎮 Usage
 
-import { Button } from './Button';
+### Basic Workflow
 
-const meta: Meta<typeof Button> = {
-  component: Button,
-  parameters: {
-    myAddon: {
-      exampleParameter: true,
-      // See API section below for available parameters
+1. **Open Storybook** and navigate to any story
+2. **Click the "A11Y Checklist" panel** in the addons panel
+3. **Review the component path** - auto-detected from your story
+4. **Create checklist** if none exists for the component
+5. **Work through guidelines** - mark each item as appropriate:
+   - ✅ **Pass** - Component meets this accessibility requirement
+   - ❌ **Fail** - Component violates this requirement (reason required)
+   - **N/A** - This requirement doesn't apply to this component
+   - **?** **Unknown** - Status hasn't been determined yet
+6. **Save changes** - addon auto-saves with change tracking
+
+### Advanced Features
+
+#### Multi-Level Filtering
+```javascript
+// Filter by multiple WCAG levels and statuses simultaneously
+- Select "Level AA" + "Level AAA" to focus on higher compliance
+- Filter by "Failed" items to see what needs fixing
+- Combine filters: "Level A" + "Unknown" to find basic requirements to review
+```
+
+#### Search Functionality
+```javascript
+// Search across multiple fields:
+- Guideline IDs: "1.1.1", "2.4.3"
+- Titles: "Images of Text", "Focus Order"
+- Descriptions: "keyboard", "screen reader"
+```
+
+#### Component Path Customization
+```javascript
+// Override auto-detected paths:
+- Default: "src/components/Button.tsx" (from story)
+- Custom: "packages/ui/components/Button/Button.jsx"
+- Monorepo: "apps/web/src/shared/Button.tsx"
+```
+
+## 🖥️ CLI Tool
+
+The addon includes a powerful CLI for CI/CD integration:
+
+### Check Command
+
+```bash
+# Basic check
+npx a11y-checklist check
+
+# Custom directory
+npx a11y-checklist check --dir my-a11y-checklists
+
+# Fail on outdated checklists
+npx a11y-checklist check --fail-on-outdated
+
+# Don't fail on failing tests (warnings only)
+npx a11y-checklist check --no-fail-on-failing
+```
+
+### CLI Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-d, --dir <directory>` | Checklist storage directory | `a11y-checklists` |
+| `--fail-on-outdated` | Exit with error if outdated checklists found | `false` |
+| `--fail-on-failing` | Exit with error if failing checklists found | `true` |
+
+### Example CI Integration
+
+```yaml
+# GitHub Actions example
+- name: Check A11Y Compliance
+  run: |
+    npm run build-storybook
+    npx a11y-checklist check --fail-on-outdated --fail-on-failing
+```
+
+## 📁 File Structure
+
+The addon creates and manages checklist files in your project:
+
+```
+your-project/
+├── a11y-checklists/           # Default directory
+│   ├── button.json            # Component checklists
+│   ├── modal.json
+│   └── datepicker.json
+├── .storybook/
+│   ├── main.js
+│   └── a11y-checklist.config.js  # Optional config
+└── package.json
+```
+
+### Checklist File Format
+
+```json
+{
+  "version": "2.2",
+  "componentId": "button",
+  "componentName": "Button",
+  "componentPath": "src/components/Button.tsx",
+  "componentHash": "abc123def456",
+  "lastUpdated": "2024-01-15T10:30:00Z",
+  "updatedBy": "developer@company.com",
+  "results": [
+    {
+      "guidelineId": "1.1.1",
+      "level": "A",
+      "status": "pass"
+    },
+    {
+      "guidelineId": "1.4.3",
+      "level": "AA", 
+      "status": "fail",
+      "reason": "Text contrast ratio is 3.8:1, needs to be 4.5:1 minimum"
     }
+  ],
+  "meta": {
+    "notes": "Component reviewed during sprint 23",
+    "generatedBy": "storybook-addon-a11y-checklist@1.0.0"
+  }
+}
+```
+
+## 🎨 UI Components
+
+### Status Indicators
+
+| Status | Badge | Color | Description |
+|--------|-------|-------|-------------|
+| Pass | ✅ Pass | Green | Requirement is met |
+| Fail | ❌ Fail | Red | Requirement is violated |
+| N/A | N/A | Gray | Requirement doesn't apply |  
+| Unknown | ? Unknown | Yellow | Status not determined |
+
+### Summary Statistics
+
+Real-time overview showing:
+
+- **Total Guidelines**: Complete count of applicable WCAG criteria
+- **Passed**: Successfully implemented accessibility features
+- **Failed**: Items requiring fixes (with required reasons)
+- **Not Applicable**: Guidelines that don't apply to this component
+- **Unknown**: Items still needing review
+
+### Filter Controls
+
+- **🔍 Search**: Real-time text search across all guideline content
+- **📊 Levels**: Multi-select for WCAG levels (A/AA/AAA)
+- **✅ Status**: Multi-select for compliance status
+
+## 🔧 Configuration Options
+
+### Addon Configuration
+
+```javascript
+// .storybook/a11y-checklist.config.js
+export default {
+  // WCAG version to use
+  wcagVersion: "2.2",           // "2.1" | "2.2"
+  
+  // Directory for checklist storage  
+  checklistDir: "a11y-checklists",
+  
+  // Require failure explanations
+  requireReasonOnFail: true,    // boolean
+  
+  // Server configuration (advanced)
+  server: {
+    port: 6006,                 // Storybook port
+    apiPath: "/api/a11y",       // API endpoint path
   }
 };
-
-export default meta;
 ```
 
-Another way to use the addon is...
+## 🚀 Advanced Usage
 
-## API
+### Custom Component Detection
 
-### Parameters
+For complex project structures, you can customize component path detection:
 
-This addon contributes the following parameters to Storybook, under the `myAddon` namespace:
-
-#### `disable`
-
-Type: `boolean`
-
-Disable this addon's behavior. This parameter is most useful to allow overriding at more specific
-levels. For example, if this parameter is set to true at the project level, it could then be
-re-enabled by setting it to false at the meta (component) or story level.
-
-### Options
-
-When registering this addon, you can configure it with the following options, which are passed when
-registering the addon, like so:
-
-```ts
-// .storybook/main.ts
-
-// Replace your-framework with the framework you are using (e.g., react-webpack5, vue3-vite)
-import type { StorybookConfig } from "@storybook/your-framework";
-
-const config: StorybookConfig = {
-  // ...rest of config
-  addons: [
-    "@storybook/addon-docs",
-    {
-      name: "my-addon",
-      options: {
-        // 👈 options for my-addon go here
-      },
-    },
-  ],
+```javascript
+// .storybook/a11y-checklist.config.js
+export default {
+  // Custom path resolution
+  resolveComponentPath: (storyTitle, componentName) => {
+    // Example: Map story paths to actual component locations
+    const pathMap = {
+      'Design System/Button': 'packages/ui/Button/Button.tsx',
+      'Features/Modal': 'src/components/Modal/Modal.jsx',
+    };
+    
+    return pathMap[storyTitle] || `src/components/${componentName}.tsx`;
+  }
 };
-
-export default config;
 ```
 
-#### `useExperimentalBehavior`
+## 🐛 Troubleshooting
 
-Type: `boolean`
+### Common Issues
 
-Enable experimental behavior to...
-````
+#### Server Connection Issues
+```bash
+# If you see "Read-only mode" warnings:
+1. Check that Storybook is running on the expected port
+2. Verify no firewall blocking localhost connections  
+3. Restart Storybook if the server addon isn't loading
+```
 
-## Release Management
+## 🤝 Contributing
 
-### Setup
+We welcome contributions! 
 
-This project is configured to use [auto](https://github.com/intuit/auto) for release management. It generates a changelog and pushes it to both GitHub and npm. Therefore, you need to configure access to both:
-
-- [`NPM_TOKEN`](https://docs.npmjs.com/creating-and-viewing-access-tokens#creating-access-tokens) Create a token with both _Read and Publish_ permissions.
-- [`GH_TOKEN`](https://github.com/settings/tokens) Create a token with the `repo` scope.
-
-Then open your `package.json` and edit the following fields:
-
-- `name`
-- `author`
-- `repository`
-
-#### Local
-
-To use `auto` locally create a `.env` file at the root of your project and add your tokens to it:
+### Development Setup
 
 ```bash
-GH_TOKEN=<value you just got from GitHub>
-NPM_TOKEN=<value you just got from npm>
+# Clone and install
+git clone https://github.com/storybookjs/storybook-addon-a11y-checklist
+cd storybook-addon-a11y-checklist
+npm install
+
+# Start development
+npm run dev
+
+# Run tests
+npm test
+
+# Build addon
+npm run build
 ```
 
-Lastly, **create labels on GitHub**. You’ll use these labels in the future when making changes to the package.
+## 📄 License
 
-```bash
-npx auto create-labels
-```
+MIT © [package-author]
 
-If you check on GitHub, you’ll now see a set of labels that `auto` would like you to use. Use these to tag future pull requests.
+## 🙏 Acknowledgments
 
-#### GitHub Actions
+- [WCAG 2.2 Guidelines](https://www.w3.org/WAI/WCAG22/quickref/) for accessibility standards
+- [Storybook](https://storybook.js.org/) for the amazing addon ecosystem
+- The accessibility community for guidance and feedback
 
-This template comes with GitHub actions already set up to publish your addon anytime someone pushes to your repository.
+---
 
-Go to `Settings > Secrets`, click `New repository secret`, and add your `NPM_TOKEN`.
-
-### Creating a release
-
-To create a release locally you can run the following command, otherwise the GitHub action will make the release for you.
-
-```sh
-npm run release
-```
-
-That will:
-
-- Build and package the addon code
-- Bump the version
-- Push a release to GitHub and npm
-- Push a changelog to GitHub
+Made with ❤️ for accessible web development
