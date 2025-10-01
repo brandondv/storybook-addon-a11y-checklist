@@ -1,22 +1,35 @@
 {
-  "name": "storybook-addon-kit",
-  "version": "0.0.0",
-  "description": "everything you need to build a Storybook addon",
+  "name": "storybook-addon-a11y-checklist",
+  "version": "1.0.0",
+  "description": "A Storybook addon for maintaining WCAG accessibility checklists per story",
   "keywords": [
-    "storybook-addons"
+    "storybook-addons",
+    "storybook-addons",
+    "accessibility",
+    "a11y",
+    "wcag",
+    "checklist"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/storybookjs/storybook-addon-kit"
+    "url": "https://github.com/storybookjs/storybook-a11y-checklist-addon"
   },
   "type": "module",
   "license": "MIT",
   "author": "package-author",
+  "bin": {
+    "a11y-checklist": "./dist/cli/index.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "require": "./dist/server.cjs"
     },
     "./preview": {
       "types": "./dist/index.d.ts",
@@ -34,11 +47,12 @@
     "*.d.ts"
   ],
   "scripts": {
-    "postinstall": "node scripts/welcome.js",
     "build": "tsup",
     "build:watch": "npm run build -- --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "run-p build:watch \"storybook --quiet\"",
+    "server": "node scripts/start-server.js",
+    "dev": "run-p server storybook",
     "prerelease": "zx scripts/prepublish-checks.js",
     "release": "npm run build && auto shipit",
     "eject-ts": "zx scripts/eject-typescript.js",
@@ -46,11 +60,17 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@storybook/icons": "^1.4.0"
+    "@storybook/icons": "^1.4.0",
+    "commander": "^11.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "npm-run-all": "^4.1.5",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@storybook/addon-docs": "^9.1.0",
     "@storybook/react-vite": "^9.1.0",
+    "@types/express": "^4.17.21",
     "@types/node": "^22",
     "@types/react": "^18.2.65",
     "@types/react-dom": "^18.2.21",
@@ -86,13 +106,19 @@
       "src/preview.ts"
     ],
     "nodeEntries": [
-      "src/preset.ts"
+      "src/preset.ts",
+      "src/cli/index.ts",
+      "src/server.ts"
     ]
   },
   "storybook": {
-    "displayName": "Addon Kit",
+    "displayName": "A11Y Checklist",
     "supportedFrameworks": [
-      "supported-frameworks"
+      "react",
+      "vue",
+      "angular",
+      "web-components",
+      "html"
     ],
     "icon": "https://user-images.githubusercontent.com/321738/63501763-88dbf600-c4cc-11e9-96cd-94adadc2fd72.png"
   }

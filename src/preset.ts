@@ -1,14 +1,22 @@
-// You can use presets to augment the Storybook configuration
-// You rarely want to do this in addons,
-// so often you want to delete this file and remove the reference to it in package.json#exports and package.json#bunder.nodeEntries
-// Read more about presets at https://storybook.js.org/docs/addons/writing-presets
+import { A11yChecklistServer } from "./utils/server";
+import { DEFAULT_CONFIG } from "./constants";
 
-export const viteFinal = async (config: any) => {
-  console.log("This addon is augmenting the Vite config");
-  return config;
-};
+export interface A11yChecklistOptions {
+  wcagVersion?: string;
+  checklistDir?: string;
+  requireReasonOnFail?: boolean;
+}
 
-export const webpack = async (config: any) => {
-  console.log("This addon is augmenting the Webpack config");
-  return config;
+export const managerEntries = [require.resolve("./manager")];
+
+// Storybook middleware for handling API requests
+export const middleware = (router: any) => {
+  const projectRoot = process.cwd();
+
+  const server = new A11yChecklistServer({
+    projectRoot,
+    checklistDir: DEFAULT_CONFIG.checklistDir,
+  });
+
+  server.setupRoutes(router);
 };
