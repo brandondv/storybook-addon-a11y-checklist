@@ -4,7 +4,7 @@ A comprehensive Storybook addon for maintaining WCAG accessibility checklists pe
 
 ![npm version](https://img.shields.io/npm/v/storybook-addon-a11y-checklist)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Storybook](https://img.shields.io/badge/Storybook-9+-FF4785?logo=storybook)
+![Storybook](https://img.shields.io/badge/Storybook-8%2B-FF4785?logo=storybook)
 
 ## ✨ Features
 
@@ -43,6 +43,10 @@ A comprehensive Storybook addon for maintaining WCAG accessibility checklists pe
 ```bash
 npm install --save-dev storybook-addon-a11y-checklist
 ```
+
+**Requirements:**
+- Storybook 8.0+ or 9.0+
+- Node.js 16+
 
 ## ⚙️ Setup
 
