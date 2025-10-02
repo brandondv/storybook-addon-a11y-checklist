@@ -9,31 +9,35 @@ A comprehensive Storybook addon for maintaining WCAG accessibility checklists pe
 ## ✨ Features
 
 ### 🎯 Component-Based Accessibility Tracking
+
 - **Component-centric checklists** - Track accessibility compliance per component, not per story
 - **Auto-component detection** - Automatically detects component paths from Storybook stories
 - **Manual override support** - Customize component paths when auto-detection isn't sufficient
 - **Component versioning** - Tracks component changes with file hashing to detect outdated checklists
 
 ### 📋 Comprehensive WCAG 2.2 Support
+
 - **87 WCAG 2.2 Guidelines** - Complete coverage of Level A, AA, and AAA criteria
 - **Interactive checklist UI** - Mark items as Pass/Fail/Not Applicable/Unknown
 - **Failure reason tracking** - Required explanations for failed accessibility criteria
 - **Direct WCAG links** - Quick access to official WCAG specification for each guideline
 
 ### 🔄 Smart State Management
+
 - **Story-adjacent files** - Checklist files (`.a11y.json`) are stored right next to your story files
 - **Server-side persistence** - Checklists saved as JSON files with automatic directory management
 - **Read-only fallback** - Graceful degradation when server is unavailable
-- **Auto-save functionality** - Changes saved automatically with unsaved changes indicator
 - **Outdated detection** - Automatically detects when component changes make checklists outdated
 
 ### 🎨 Advanced Filtering & Search
+
 - **Multi-select filters** - Filter by WCAG levels (A/AA/AAA) and status simultaneously  
 - **Real-time search** - Search across guideline titles, descriptions, and IDs
 - **Visual status indicators** - Color-coded badges for quick status identification
 - **Summary statistics** - Real-time counts of passed/failed/not applicable/unknown items
 
 ### 🚀 CI/CD Integration
+
 - **CLI tool included** - Check accessibility compliance in build pipelines
 - **Configurable failure modes** - Fail builds on outdated or failing checklists
 - **Detailed reporting** - Comprehensive CLI output for debugging failures
@@ -96,6 +100,7 @@ src/
 ```
 
 This approach provides several benefits:
+
 - **Co-location**: Accessibility data stays with your components
 - **Git friendly**: Changes to components and their accessibility status are tracked together
 - **Team collaboration**: Easy to find and review accessibility checklists during code reviews
@@ -107,40 +112,12 @@ This approach provides several benefits:
 
 1. **Open Storybook** and navigate to any story
 2. **Click the "A11Y Checklist" panel** in the addons panel
-3. **Review the component path** - auto-detected from your story
-4. **Create checklist** if none exists for the component
-5. **Work through guidelines** - mark each item as appropriate:
+3. **Work through guidelines** - mark each item as appropriate:
    - ✅ **Pass** - Component meets this accessibility requirement
    - ❌ **Fail** - Component violates this requirement (reason required)
    - **N/A** - This requirement doesn't apply to this component
    - **?** **Unknown** - Status hasn't been determined yet
-6. **Save changes** - addon auto-saves with change tracking
-
-### Advanced Features
-
-#### Multi-Level Filtering
-```javascript
-// Filter by multiple WCAG levels and statuses simultaneously
-- Select "Level AA" + "Level AAA" to focus on higher compliance
-- Filter by "Failed" items to see what needs fixing
-- Combine filters: "Level A" + "Unknown" to find basic requirements to review
-```
-
-#### Search Functionality
-```javascript
-// Search across multiple fields:
-- Guideline IDs: "1.1.1", "2.4.3"
-- Titles: "Images of Text", "Focus Order"
-- Descriptions: "keyboard", "screen reader"
-```
-
-#### Component Path Customization
-```javascript
-// Override auto-detected paths:
-- Default: "src/components/Button.tsx" (from story)
-- Custom: "packages/ui/components/Button/Button.jsx"
-- Monorepo: "apps/web/src/shared/Button.tsx"
-```
+4. **Save changes** - addon saves with change tracking
 
 ## 🖥️ CLI Tool
 
@@ -174,22 +151,6 @@ npx a11y-checklist check --no-fail-on-failing
   run: |
     npm run build-storybook
     npx a11y-checklist check --fail-on-outdated --fail-on-failing
-```
-
-## 📁 File Structure
-
-The addon creates and manages checklist files in your project:
-
-```
-your-project/
-├── a11y-checklists/           # Default directory
-│   ├── button.json            # Component checklists
-│   ├── modal.json
-│   └── datepicker.json
-├── .storybook/
-│   ├── main.js
-│   └── a11y-checklist.config.js  # Optional config
-└── package.json
 ```
 
 ### Checklist File Format
@@ -250,91 +211,19 @@ Real-time overview showing:
 - **📊 Levels**: Multi-select for WCAG levels (A/AA/AAA)
 - **✅ Status**: Multi-select for compliance status
 
-## 🔧 Configuration Options
-
-### Addon Configuration
-
-```javascript
-// .storybook/a11y-checklist.config.js
-export default {
-  // Require failure explanations
-  requireReasonOnFail: true,    // boolean
-  
-  // Server configuration (advanced)
-  server: {
-    port: 6006,                 // Storybook port
-    apiPath: "/api/a11y",       // API endpoint path
-  }
-};
-```
-
-## 🚀 Advanced Usage
-
-### Custom Component Detection
-
-For complex project structures, you can customize component path detection:
-
-```javascript
-// .storybook/a11y-checklist.config.js
-export default {
-  // Custom path resolution
-  resolveComponentPath: (storyTitle, componentName) => {
-    // Example: Map story paths to actual component locations
-    const pathMap = {
-      'Design System/Button': 'packages/ui/Button/Button.tsx',
-      'Features/Modal': 'src/components/Modal/Modal.jsx',
-    };
-    
-    return pathMap[storyTitle] || `src/components/${componentName}.tsx`;
-  }
-};
-```
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
 #### Server Connection Issues
+
 ```bash
 # If you see "Read-only mode" warnings:
 1. Check that Storybook is running on the expected port
 2. Verify no firewall blocking localhost connections  
 3. Restart Storybook if the server addon isn't loading
 ```
-
-## 📦 Migration Guide
-
-### From v0.x to v1.x: Story-Adjacent Files
-
-In v1.x, checklist files are now stored next to your story files instead of in a centralized directory. This provides better organization and discoverability.
-
-**Before (v0.x):**
-```
-a11y-checklists/
-├── Button.a11y.json
-├── Header.a11y.json
-└── Modal.a11y.json
-```
-
-**After (v1.x):**
-```
-src/components/
-├── Button/
-│   ├── Button.tsx
-│   ├── Button.stories.tsx
-│   └── Button.a11y.json        ← Now here!
-├── Header/
-│   ├── Header.jsx
-│   ├── Header.stories.js
-│   └── Header.a11y.json        ← Now here!
-```
-
-**Migration Steps:**
-1. Update to v1.x of the addon
-2. Remove the `checklistDir` option from your Storybook configuration
-3. Existing files in the centralized directory will continue to work until you move them
-4. New checklists will automatically be created next to story files
-5. Optionally move existing `.a11y.json` files next to their corresponding story files
 
 ## 🤝 Contributing
 
@@ -370,4 +259,4 @@ MIT © [package-author]
 
 ---
 
-Made with ❤️ for accessible web development
+Vibe coded with ❤️ for accessible web development

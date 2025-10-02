@@ -22,7 +22,8 @@ export class ChecklistFileReader {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
 
-      const response = await fetch('/health', {
+      // Try the standalone server health endpoint first
+      const response = await fetch('http://localhost:3001/health', {
         signal: controller.signal,
         cache: 'no-cache'
       });
@@ -49,16 +50,11 @@ export class ChecklistFileReader {
     }
 
     try {
-      // Try different possible file paths
-      const possiblePaths = [
-        `/.storybook/a11y-checklists/${componentId}.a11y.json`,
-        `/a11y-checklists/${componentId}.a11y.json`,
-        `/checklists/${componentId}.a11y.json`,
-      ];
+      const possiblePaths = this.generateChecklistPaths(componentPath);
 
       for (const path of possiblePaths) {
         try {
-          const response = await fetch(path, { cache: 'no-cache' });
+          const response = await fetch(path, { cache: "no-cache" });
           if (response.ok) {
             const checklist: ChecklistFile = await response.json();
             this.checklistsCache.set(cacheKey, checklist);
@@ -75,6 +71,41 @@ export class ChecklistFileReader {
       console.warn(`Failed to import checklist file for ${componentId}:`, error);
       return null;
     }
+  }
+
+  /**
+   * Generate possible paths for checklist files based on component path
+   * This handles story-adjacent file placement
+   */
+  private generateChecklistPaths(componentPath: string): string[] {
+    if (!componentPath) return [];
+
+    // Normalize the component path to handle different formats
+    const normalizedPath = componentPath.startsWith('./') ? componentPath.slice(2) : componentPath;
+    const pathWithoutExtension = normalizedPath.replace(/\.(tsx?|jsx?|vue|stories\.(tsx?|jsx?|js|ts|vue))$/i, '');
+    
+    // Get directory and filename parts
+    const lastSlashIndex = pathWithoutExtension.lastIndexOf('/');
+    const directory = lastSlashIndex >= 0 ? pathWithoutExtension.substring(0, lastSlashIndex) : '';
+    const filename = lastSlashIndex >= 0 ? pathWithoutExtension.substring(lastSlashIndex + 1) : pathWithoutExtension;
+    
+    const paths: string[] = [];
+    
+    // Try story-adjacent paths in the build output
+    if (directory) {
+      // Path with full directory structure: /src/components/Button/Button.a11y.json
+      paths.push(`/${directory}/${filename}.a11y.json`);
+      // Path without src prefix: /components/Button/Button.a11y.json
+      const withoutSrc = directory.replace(/^src\//, '');
+      if (withoutSrc !== directory) {
+        paths.push(`/${withoutSrc}/${filename}.a11y.json`);
+      }
+    } else {
+      // Root level: /Button.a11y.json
+      paths.push(`/${filename}.a11y.json`);
+    }
+    
+    return paths;
   }
 
   /**

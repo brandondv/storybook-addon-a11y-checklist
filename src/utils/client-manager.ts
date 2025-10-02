@@ -35,7 +35,7 @@ export class ChecklistClientManager {
         `${this.baseUrl}/a11y-checklist/${componentId}?${params}`,
         {
           // Add timeout to fail fast if server is not available
-          signal: AbortSignal.timeout(5000),
+          signal: AbortSignal.timeout(3000), // Reduced timeout for faster fallback
         },
       );
 

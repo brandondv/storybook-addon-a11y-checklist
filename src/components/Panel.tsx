@@ -285,7 +285,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
                 onStatusChange={(id, newStatus) => {
                   updateChecklistItem(id, {
                     status: newStatus,
-                    reason: newStatus === "failed" ? reason : undefined,
+                    reason: newStatus === "fail" ? reason : undefined,
                   });
                 }}
                 onFailureReasonChange={(id, newReason) => {
