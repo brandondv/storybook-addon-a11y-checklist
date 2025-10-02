@@ -215,8 +215,13 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
           <div style={{ marginBottom: "16px" }}>
             <div style={{ fontSize: "12px", color: "#666" }}>
               Last updated:{" "}
-              {new Date(checklist.lastUpdated).toLocaleDateString("nl-NL")}
-              {checklist.updatedBy && <span> by {checklist.updatedBy}</span>}
+              {new Date(checklist.lastUpdated).toLocaleDateString("nl-NL", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </div>
           </div>
         )}
@@ -273,28 +278,13 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
                 key={guideline.id}
                 guideline={{
                   ...guideline,
-                  status:
-                    status === "pass"
-                      ? "passed"
-                      : status === "fail"
-                        ? "failed"
-                        : status === "not_applicable"
-                          ? "not_applicable"
-                          : "unknown",
+                  status,
                   failureReason: reason,
                 }}
                 isReadOnly={isReadOnlyMode}
                 onStatusChange={(id, newStatus) => {
-                  const mappedStatus =
-                    newStatus === "passed"
-                      ? "pass"
-                      : newStatus === "failed"
-                        ? "fail"
-                        : newStatus === "not_applicable"
-                          ? "not_applicable"
-                          : "unknown";
                   updateChecklistItem(id, {
-                    status: mappedStatus as ChecklistStatus,
+                    status: newStatus,
                     reason: newStatus === "failed" ? reason : undefined,
                   });
                 }}

@@ -1,7 +1,8 @@
 import React from "react";
 import { styled } from "@storybook/theming";
-import { Badge, Button, Link, Select } from "./StyledComponents";
+import { Badge, Button, Link } from "./StyledComponents";
 import { STATUS_COLORS, STATUS_LABELS, LEVEL_COLORS } from "./constants";
+import type { ChecklistStatus } from "src/types";
 
 const GuidelineItemCard = styled.div({
   border: "1px solid #e0e0e0",
@@ -67,7 +68,7 @@ interface GuidelineItem {
   title: string;
   description: string;
   level: string;
-  status: "passed" | "failed" | "not_applicable" | "unknown";
+  status: ChecklistStatus;
   failureReason?: string;
   url: string;
 }
@@ -77,26 +78,10 @@ interface GuidelineCardProps {
   isReadOnly: boolean;
   onStatusChange: (
     id: string,
-    status: "passed" | "failed" | "not_applicable" | "unknown",
+    status: ChecklistStatus,
   ) => void;
   onFailureReasonChange: (id: string, reason: string) => void;
 }
-
-// Helper function to map status values to constant keys
-const mapStatusToKey = (status: string) => {
-  switch (status) {
-    case "passed":
-      return "pass";
-    case "failed":
-      return "fail";
-    case "not_applicable":
-      return "not_applicable";
-    case "unknown":
-      return "unknown";
-    default:
-      return "unknown";
-  }
-};
 
 export const GuidelineCard: React.FC<GuidelineCardProps> = ({
   guideline,
@@ -110,9 +95,9 @@ export const GuidelineCard: React.FC<GuidelineCardProps> = ({
         <GuidelineInfo>
           <GuidelineDetails>
             <Badge
-              customColor={STATUS_COLORS[mapStatusToKey(guideline.status)]}
+              customColor={STATUS_COLORS[guideline.status]}
             >
-              {STATUS_LABELS[mapStatusToKey(guideline.status)]}
+              {STATUS_LABELS[guideline.status]}
             </Badge>
 
             <Badge
@@ -141,26 +126,26 @@ export const GuidelineCard: React.FC<GuidelineCardProps> = ({
         <StatusControls>
           <>
             <Button
-              variant={guideline.status === "passed" ? "primary" : "secondary"}
-              onClick={() => onStatusChange(guideline.id, "passed")}
+              variant={guideline.status === "pass" ? "primary" : "secondary"}
+              onClick={() => onStatusChange(guideline.id, "pass")}
               style={{
                 backgroundColor:
-                  guideline.status === "passed" ? "#28a745" : "#f8f9fa",
-                color: guideline.status === "passed" ? "white" : "#333",
-                border: `1px solid ${guideline.status === "passed" ? "#28a745" : "#dee2e6"}`,
+                  guideline.status === "pass" ? "#28a745" : "#f8f9fa",
+                color: guideline.status === "pass" ? "white" : "#333",
+                border: `1px solid ${guideline.status === "pass" ? "#28a745" : "#dee2e6"}`,
               }}
             >
               ✓ Pass
             </Button>
 
             <Button
-              variant={guideline.status === "failed" ? "primary" : "secondary"}
-              onClick={() => onStatusChange(guideline.id, "failed")}
+              variant={guideline.status === "fail" ? "primary" : "secondary"}
+              onClick={() => onStatusChange(guideline.id, "fail")}
               style={{
                 backgroundColor:
-                  guideline.status === "failed" ? "#dc3545" : "#f8f9fa",
-                color: guideline.status === "failed" ? "white" : "#333",
-                border: `1px solid ${guideline.status === "failed" ? "#dc3545" : "#dee2e6"}`,
+                  guideline.status === "fail" ? "#dc3545" : "#f8f9fa",
+                color: guideline.status === "fail" ? "white" : "#333",
+                border: `1px solid ${guideline.status === "fail" ? "#dc3545" : "#dee2e6"}`,
               }}
             >
               ✗ Fail
@@ -184,7 +169,7 @@ export const GuidelineCard: React.FC<GuidelineCardProps> = ({
         </StatusControls>
       )}
 
-      {(guideline.status === "failed" || guideline.failureReason) && (
+      {(guideline.status === "fail" || guideline.failureReason) && (
         <FailureReasonTextarea
           placeholder={
             isReadOnly
