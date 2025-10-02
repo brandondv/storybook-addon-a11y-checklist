@@ -67,7 +67,10 @@ export class ChecklistManager {
     // Extract directory from component path and place .a11y.json file there
     const componentDir = componentPath.substring(0, componentPath.lastIndexOf('/'));
     const fileName = componentPath.substring(componentPath.lastIndexOf('/') + 1);
-    const baseFileName = fileName.replace(/\.(tsx?|jsx?|stories\.(tsx?|jsx?|js|ts))$/i, '');
+    const baseFileName = fileName.replace(
+      /\.(tsx?|jsx?|vue|stories\.(tsx?|jsx?|js|ts|vue))$/i,
+      "",
+    );
     return resolve(this.projectRoot, componentDir, `${baseFileName}.a11y.json`);
   }
 
