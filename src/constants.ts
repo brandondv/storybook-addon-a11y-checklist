@@ -11,6 +11,5 @@ export const EVENTS = {
 
 export const DEFAULT_CONFIG = {
   wcagVersion: "2.2",
-  checklistDir: "a11y-checklists",
   requireReasonOnFail: true,
 } as const;

@@ -33,7 +33,6 @@ export interface ChecklistFile {
 
 export interface AddonConfig {
   wcagVersion: string;
-  checklistDir: string;
   requireReasonOnFail: boolean;
 }
 

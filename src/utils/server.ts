@@ -4,14 +4,13 @@ import type { ChecklistFile, LoadChecklistResponse, SaveChecklistPayload } from 
 
 export interface A11yServerOptions {
   projectRoot: string;
-  checklistDir?: string;
 }
 
 export class A11yChecklistServer {
   private checklistManager: ChecklistManager;
 
   constructor(options: A11yServerOptions) {
-    this.checklistManager = new ChecklistManager(options.projectRoot, options.checklistDir);
+    this.checklistManager = new ChecklistManager(options.projectRoot);
   }
 
   setupRoutes(router: Router): void {
@@ -41,7 +40,7 @@ export class A11yChecklistServer {
 
           // Try to load existing checklist
           let checklist =
-            await this.checklistManager.loadChecklist(componentId);
+            await this.checklistManager.loadChecklist(componentId, componentPath);
           let isOutdated = false;
 
           if (!checklist) {

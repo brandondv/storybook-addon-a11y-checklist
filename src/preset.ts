@@ -3,7 +3,6 @@ import { DEFAULT_CONFIG } from "./constants";
 
 export interface A11yChecklistOptions {
   wcagVersion?: string;
-  checklistDir?: string;
   requireReasonOnFail?: boolean;
 }
 
@@ -15,7 +14,6 @@ export const middleware = (router: any) => {
 
   const server = new A11yChecklistServer({
     projectRoot,
-    checklistDir: DEFAULT_CONFIG.checklistDir,
   });
 
   server.setupRoutes(router);

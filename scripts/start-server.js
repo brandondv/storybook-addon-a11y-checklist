@@ -21,16 +21,15 @@ async function startServer() {
 
     // Middleware
     app.use(cors({
-      origin: ['http://localhost:6006', 'http://localhost:3000'], // Storybook and potential dev servers
+      origin: /^https?:\/\/localhost:\d+$/, // Allow any port number on localhost
       credentials: true
     }));
     app.use(express.json());
 
     // Create server instance
     const projectRoot = process.cwd();
-    const a11yServer = new A11yChecklistServer({ 
-      projectRoot,
-      checklistDir: path.join(projectRoot, '.storybook', 'a11y-checklists')
+    const a11yServer = new A11yChecklistServer({
+      projectRoot
     });
 
     // Setup API routes

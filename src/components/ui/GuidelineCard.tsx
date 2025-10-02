@@ -109,13 +109,12 @@ export const GuidelineCard: React.FC<GuidelineCardProps> = ({
       <GuidelineHeader>
         <GuidelineInfo>
           <GuidelineDetails>
-            {isReadOnly && (
-              <Badge
-                customColor={STATUS_COLORS[mapStatusToKey(guideline.status)]}
-              >
-                {STATUS_LABELS[mapStatusToKey(guideline.status)]}
-              </Badge>
-            )}
+            <Badge
+              customColor={STATUS_COLORS[mapStatusToKey(guideline.status)]}
+            >
+              {STATUS_LABELS[mapStatusToKey(guideline.status)]}
+            </Badge>
+
             <Badge
               customColor={
                 LEVEL_COLORS[guideline.level as keyof typeof LEVEL_COLORS]
@@ -123,11 +122,15 @@ export const GuidelineCard: React.FC<GuidelineCardProps> = ({
             >
               {guideline.level}
             </Badge>
+
             <GuidelineTitle>
               {guideline.id} {guideline.title}
             </GuidelineTitle>
+
           </GuidelineDetails>
+
           <GuidelineDescription>{guideline.description}</GuidelineDescription>
+
           <Link href={guideline.url} target="_blank" rel="noopener noreferrer">
             Read more
           </Link>
@@ -137,19 +140,6 @@ export const GuidelineCard: React.FC<GuidelineCardProps> = ({
       {!isReadOnly && (
         <StatusControls>
           <>
-            <Button
-              variant={guideline.status === "unknown" ? "primary" : "secondary"}
-              onClick={() => onStatusChange(guideline.id, "unknown")}
-              style={{
-                backgroundColor:
-                  guideline.status === "unknown" ? "#ff8400ff" : "#f8f9fa",
-                color: "#333",
-                border: `1px solid ${guideline.status === "unknown" ? "#ff8400ff" : "#dee2e6"}`,
-              }}
-            >
-              ? Unknown
-            </Button>
-
             <Button
               variant={guideline.status === "passed" ? "primary" : "secondary"}
               onClick={() => onStatusChange(guideline.id, "passed")}
@@ -188,7 +178,7 @@ export const GuidelineCard: React.FC<GuidelineCardProps> = ({
                 border: `1px solid ${guideline.status === "not_applicable" ? "#6c757d" : "#dee2e6"}`,
               }}
             >
-              N/A
+              Not Applicable
             </Button>
           </>
         </StatusControls>
@@ -199,7 +189,7 @@ export const GuidelineCard: React.FC<GuidelineCardProps> = ({
           placeholder={
             isReadOnly
               ? "No failure reason provided"
-              : "Describe why this guideline failed (optional)..."
+              : "Describe why this guideline failed ..."
           }
           value={guideline.failureReason || ""}
           onChange={(e) => onFailureReasonChange(guideline.id, e.target.value)}

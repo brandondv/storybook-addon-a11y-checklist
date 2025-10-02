@@ -51,33 +51,24 @@ const ChecklistFileSchema = z.object({
 });
 
 export class ChecklistManager {
-  private checklistDir: string;
   private projectRoot: string;
 
-  constructor(
-    projectRoot: string,
-    checklistDir: string = DEFAULT_CONFIG.checklistDir,
-  ) {
+  constructor(projectRoot: string) {
     this.projectRoot = projectRoot;
-    this.checklistDir = resolve(projectRoot, checklistDir);
   }
 
-  /**
-   * Ensure the checklist directory exists
-   */
-  private async ensureDirectoryExists(): Promise<void> {
-    try {
-      await fs.access(this.checklistDir);
-    } catch {
-      await fs.mkdir(this.checklistDir, { recursive: true });
-    }
-  }
+
 
   /**
-   * Get the file path for a component's checklist
+   * Get the file path for a component's checklist based on the component's actual file path
+   * This places the checklist file next to the story file
    */
-  private getChecklistFilePath(componentId: string): string {
-    return join(this.checklistDir, `${componentId}.a11y.json`);
+  private getChecklistFilePath(componentPath: string): string {
+    // Extract directory from component path and place .a11y.json file there
+    const componentDir = componentPath.substring(0, componentPath.lastIndexOf('/'));
+    const fileName = componentPath.substring(componentPath.lastIndexOf('/') + 1);
+    const baseFileName = fileName.replace(/\.(tsx?|jsx?|stories\.(tsx?|jsx?|js|ts))$/i, '');
+    return resolve(this.projectRoot, componentDir, `${baseFileName}.a11y.json`);
   }
 
   /**
@@ -100,9 +91,9 @@ export class ChecklistManager {
   /**
    * Load a checklist file for a component
    */
-  async loadChecklist(componentId: string): Promise<ChecklistFile | null> {
+  async loadChecklist(componentId: string, componentPath: string): Promise<ChecklistFile | null> {
     try {
-      const filePath = this.getChecklistFilePath(componentId);
+      const filePath = this.getChecklistFilePath(componentPath);
       const content = await fs.readFile(filePath, "utf-8");
       const data = JSON.parse(content);
 
@@ -126,7 +117,15 @@ export class ChecklistManager {
       // Validate the checklist data
       ChecklistFileSchema.parse(checklist);
 
-      await this.ensureDirectoryExists();
+      const filePath = this.getChecklistFilePath(checklist.componentPath);
+      
+      // Ensure the directory exists for the file path
+      const fileDir = filePath.substring(0, filePath.lastIndexOf('/'));
+      try {
+        await fs.access(fileDir);
+      } catch {
+        await fs.mkdir(fileDir, { recursive: true });
+      }
 
       // Update metadata
       const updatedChecklist: ChecklistFile = {
@@ -138,7 +137,6 @@ export class ChecklistManager {
         },
       };
 
-      const filePath = this.getChecklistFilePath(checklist.componentId);
       const content = JSON.stringify(updatedChecklist, null, 2);
       await fs.writeFile(filePath, content, "utf-8");
     } catch (error) {
@@ -199,26 +197,51 @@ export class ChecklistManager {
   }
 
   /**
-   * Get all checklist files in the directory
+   * Recursively find all .a11y.json files in the project
+   */
+  private async findAllChecklistFiles(dir: string = this.projectRoot): Promise<string[]> {
+    const files: string[] = [];
+    
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const fullPath = join(dir, entry.name);
+        
+        if (entry.isDirectory()) {
+          // Skip node_modules and other common build/cache directories
+          if (!['node_modules', '.git', 'dist', 'build', '.next', '.storybook-static'].includes(entry.name)) {
+            const subdirFiles = await this.findAllChecklistFiles(fullPath);
+            files.push(...subdirFiles);
+          }
+        } else if (entry.name.endsWith('.a11y.json')) {
+          files.push(fullPath);
+        }
+      }
+    } catch (error) {
+      // Ignore permission errors or other issues with specific directories
+    }
+    
+    return files;
+  }
+
+  /**
+   * Get all checklist files in the project (co-located with stories)
    */
   async getAllChecklists(): Promise<ChecklistFile[]> {
     try {
-      await this.ensureDirectoryExists();
-      const files = await fs.readdir(this.checklistDir);
-      const checklistFiles = files.filter((file: string) =>
-        file.endsWith(".a11y.json"),
-      );
+      // Find all .a11y.json files co-located with stories
+      const checklistFiles = await this.findAllChecklistFiles();
 
       const checklists: ChecklistFile[] = [];
-      for (const file of checklistFiles) {
+      for (const filePath of checklistFiles) {
         try {
-          const componentId = file.replace(".a11y.json", "");
-          const checklist = await this.loadChecklist(componentId);
-          if (checklist) {
-            checklists.push(checklist);
-          }
+          const content = await fs.readFile(filePath, "utf-8");
+          const data = JSON.parse(content);
+          const validated = ChecklistFileSchema.parse(data);
+          checklists.push(validated);
         } catch (error) {
-          console.warn(`Failed to load checklist file ${file}:`, error);
+          console.warn(`Failed to load checklist file ${filePath}:`, error);
         }
       }
 

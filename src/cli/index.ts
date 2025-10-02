@@ -12,12 +12,11 @@ program
 program
   .command('check')
   .description('Check for outdated or failing checklists')
-  .option('-d, --dir <directory>', 'Checklist directory', 'a11y-checklists')
   .option('--fail-on-outdated', 'Exit with error code if outdated checklists found', false)
   .option('--fail-on-failing', 'Exit with error code if failing checklists found', true)
   .action(async (options) => {
     const projectRoot = process.cwd();
-    const manager = new ChecklistManager(projectRoot, options.dir);
+    const manager = new ChecklistManager(projectRoot);
 
     try {
       const [outdatedChecklists, failingChecklists] = await Promise.all([
@@ -72,10 +71,9 @@ program
 program
   .command('list')
   .description('List all checklists')
-  .option('-d, --dir <directory>', 'Checklist directory', 'a11y-checklists')
   .action(async (options) => {
     const projectRoot = process.cwd();
-    const manager = new ChecklistManager(projectRoot, options.dir);
+    const manager = new ChecklistManager(projectRoot);
 
     try {
       const checklists = await manager.getAllChecklists();

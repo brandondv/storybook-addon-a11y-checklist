@@ -1,17 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useStorybookApi, useStorybookState } from "@storybook/manager-api";
 import { ChecklistClientManager } from "../utils/client-manager";
-import {
-  WCAG_2_2_GUIDELINES,
-  getGuidelinesByVersion,
-} from "../data/wcag-guidelines";
+import { getGuidelinesByVersion } from "../data/wcag-guidelines";
 import { DEFAULT_CONFIG } from "../constants";
-import type {
-  ChecklistFile,
-  ChecklistItem,
-  WCAGGuideline,
-  ChecklistStatus,
-} from "../types";
+import type { ChecklistFile, ChecklistItem, ChecklistStatus } from "../types";
 import {
   PanelWrapper,
   Header,
@@ -19,9 +11,7 @@ import {
   ButtonGroup,
   Badge,
   Button,
-  Input,
 } from "./ui/StyledComponents";
-import { MultiSelect } from "./ui/MultiSelect";
 import { SummaryBlocks } from "./ui/SummaryBlocks";
 import { ChecklistFilters } from "./ui/ChecklistFilters";
 import { GuidelineCard } from "./ui/GuidelineCard";
@@ -39,7 +29,6 @@ interface FilterState {
 export const Panel: React.FC<PanelProps> = ({ active }) => {
   if (!active) return null;
 
-  const api = useStorybookApi();
   const state = useStorybookState();
   const [checklist, setChecklist] = useState<ChecklistFile | null>(null);
   const [isOutdated, setIsOutdated] = useState(false);
@@ -59,33 +48,8 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
     state.storiesHash?.[currentStoryId || ""] ||
     state.index?.[currentStoryId || ""] ||
     null;
-
-  // Auto-detect component path from story, but allow user override
-  const componentPath = useMemo(() => {
-    if (!currentStory) {
-      return "No component path detected";
-    }
-
-    // Try to extract from story parameters or title - handle both Storybook 8 and 9 structures
-    const storyTitle =
-      (currentStory as any).title || (currentStory as any).name || "";
-    const componentName = storyTitle.split("/").pop() || "Component";
-
-    // Generate a reasonable component path
-    return `src/components/${componentName}.tsx`;
-  }, [currentStory]);
-
-  // Generate component ID from path for checklist identification
-  const componentId = useMemo(() => {
-    if (!componentPath) return "component";
-
-    // Extract component name from path and normalize it
-    // e.g., "src/components/Button.tsx" -> "button"
-    // e.g., "components/MyButton/MyButton.jsx" -> "mybutton"
-    const fileName = componentPath.split("/").pop() || "component";
-    const nameWithoutExt = fileName.replace(/\\.(tsx?|jsx?)$/, "");
-    return nameWithoutExt.toLowerCase().replace(/[^a-z0-9]/gi, "");
-  }, [componentPath]);
+  const componentPath = `${((currentStory as any)?.componentPath as string).replace("../", "") || ""}`;
+  const componentId = (currentStory as any)?.parent || "";
 
   const guidelines = useMemo(
     () => getGuidelinesByVersion(DEFAULT_CONFIG.wcagVersion),
@@ -109,22 +73,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
       // Check if we're in read-only mode
       setIsReadOnlyMode(clientManager.isReadOnlyMode());
 
-      // If no checklist exists, create a default one
-      if (!data.checklist) {
-        const componentName =
-          componentPath
-            .split("/")
-            .pop()
-            ?.replace(/\\.(tsx?|jsx?)$/, "") || "Component";
-        const defaultChecklist = clientManager.createDefaultChecklist(
-          componentId,
-          componentPath,
-          componentName,
-          DEFAULT_CONFIG.wcagVersion,
-        );
-        setChecklist(defaultChecklist);
-        setIsOutdated(false);
-      } else {
+      if (data.checklist) {
         setChecklist(data.checklist);
         setIsOutdated(data.isOutdated);
       }
@@ -133,44 +82,10 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
     } catch (err) {
       console.error("Error loading checklist:", err);
       setError(err instanceof Error ? err.message : "Failed to load checklist");
-      setChecklist(null); // Don't auto-create, let user decide
     } finally {
       setLoading(false);
     }
   }, [componentId, componentPath, clientManager]);
-
-  const createDefaultChecklist = useCallback(() => {
-    try {
-      const componentName =
-        componentPath
-          .split("/")
-          .pop()
-          ?.replace(/\\.(tsx?|jsx?)$/, "") || "Component";
-      const defaultChecklist: ChecklistFile = {
-        version: DEFAULT_CONFIG.wcagVersion,
-        componentId: componentId,
-        componentName: componentName,
-        componentPath: componentPath,
-        componentHash: "",
-        lastUpdated: new Date().toISOString(),
-        results: guidelines.map((guideline) => ({
-          guidelineId: guideline.id,
-          level: guideline.level,
-          status: "unknown" as ChecklistStatus,
-          reason: undefined,
-        })),
-        meta: {
-          notes: "",
-          generatedBy: "storybook-addon-a11y-checklist@1.0.0",
-        },
-      };
-
-      setChecklist(defaultChecklist);
-    } catch (err) {
-      console.error("Error creating default checklist:", err);
-      setError("Failed to create checklist");
-    }
-  }, [componentId, componentPath, guidelines]);
 
   const saveChecklist = useCallback(async () => {
     if (!checklist || !componentId) return;
@@ -278,7 +193,7 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
     <PanelWrapper>
       <div style={{ marginBottom: "24px" }}>
         <Header>
-          <Title>A11Y Checklist for {componentPath}</Title>
+          <Title>A11Y Checklist for {componentId}</Title>
           <ButtonGroup>
             {isOutdated && <Badge variant="danger">Outdated</Badge>}
             {isReadOnlyMode ? (
@@ -299,7 +214,8 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
         {checklist && (
           <div style={{ marginBottom: "16px" }}>
             <div style={{ fontSize: "12px", color: "#666" }}>
-              Last updated: {new Date(checklist.lastUpdated).toLocaleString()}
+              Last updated:{" "}
+              {new Date(checklist.lastUpdated).toLocaleDateString("nl-NL")}
               {checklist.updatedBy && <span> by {checklist.updatedBy}</span>}
             </div>
           </div>
@@ -335,36 +251,6 @@ export const Panel: React.FC<PanelProps> = ({ active }) => {
             }}
           >
             {error}
-          </div>
-        )}
-
-        {/* Create Checklist Button - shown when no checklist exists */}
-        {!loading && !checklist && !error && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "40px",
-              background: "#f8f9fa",
-              borderRadius: "8px",
-              marginBottom: "16px",
-            }}
-          >
-            <h3 style={{ margin: "0 0 16px 0", color: "#495057" }}>
-              No A11Y Checklist Found
-            </h3>
-            <p style={{ margin: "0 0 24px 0", color: "#6c757d" }}>
-              Create a new accessibility checklist for this story to start
-              tracking WCAG compliance.
-            </p>
-            <Button
-              variant="primary"
-              onClick={() => {
-                createDefaultChecklist();
-                setHasUnsavedChanges(true);
-              }}
-            >
-              Create A11Y Checklist
-            </Button>
           </div>
         )}
       </div>
